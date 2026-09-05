@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: eventix
+data:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/auth_db"

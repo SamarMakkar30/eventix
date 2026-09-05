@@ -1,0 +1,12 @@
+target/
+*.class
+node_modules/
+.env
+*.log
+.terraform/
+*.tfstate
+*.tfstate.backup
+.idea/
+.vscode/
+*.iml
+.DS_Store
