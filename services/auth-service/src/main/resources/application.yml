@@ -16,6 +16,11 @@ spring:
       hibernate:
         format_sql: true
 
+jwt:
+  # Override JWT_SECRET in every real environment - this default is for local dev only.
+  secret: ${JWT_SECRET:dev-only-secret-please-change-me-before-any-real-deployment-32chars-min}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
+
 management:
   endpoints:
     web:
