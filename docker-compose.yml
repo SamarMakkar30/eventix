@@ -34,6 +34,7 @@ services:
         condition: service_healthy
     networks:
       - eventix-net
+
   catalog-service:
     build: ./services/catalog-service
     container_name: catalog-service
@@ -41,12 +42,15 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/catalog_db
       SPRING_DATASOURCE_USERNAME: eventix
       SPRING_DATASOURCE_PASSWORD: eventix
+      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
     ports:
       - "8082:8082"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - eventix-net
+
   inventory-service:
     build: ./services/inventory-service
     container_name: inventory-service
@@ -60,6 +64,7 @@ services:
       - postgres
     networks:
       - eventix-net
+
   booking-service:
     build: ./services/booking-service
     container_name: booking-service
@@ -73,6 +78,7 @@ services:
       - postgres
     networks:
       - eventix-net
+
   payment-service:
     build: ./services/payment-service
     container_name: payment-service
@@ -86,6 +92,7 @@ services:
       - postgres
     networks:
       - eventix-net
+
   notification-service:
     build: ./services/notification-service
     container_name: notification-service

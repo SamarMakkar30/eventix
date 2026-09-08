@@ -16,6 +16,10 @@ spring:
       hibernate:
         format_sql: true
 
+jwt:
+  # Must match auth-service's JWT_SECRET exactly - it validates tokens it did not issue.
+  secret: ${JWT_SECRET:dev-only-secret-please-change-me-before-any-real-deployment-32chars-min}
+
 management:
   endpoints:
     web:
