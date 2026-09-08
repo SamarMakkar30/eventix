@@ -1,5 +1,6 @@
 package com.eventix.catalog.service;
 
+import com.eventix.catalog.client.InventoryClient;
 import com.eventix.catalog.dto.ShowRequest;
 import com.eventix.catalog.dto.ShowResponse;
 import com.eventix.catalog.exception.InvalidShowException;
@@ -25,8 +26,9 @@ public class ShowService {
     private final MovieService movieService;
     private final EventService eventService;
     private final VenueService venueService;
+    private final InventoryClient inventoryClient;
 
-    public ShowResponse create(ShowRequest request) {
+    public ShowResponse create(ShowRequest request, String authorizationHeader) {
         validateExactlyOneTarget(request);
 
         String title;
@@ -52,12 +54,10 @@ public class ShowService {
 
         Show saved = showRepository.save(show);
 
-        // NOTE (Phase 3 integration point): once Inventory Service exists, this is
-        // where we call it to initialize ticket stock for this show, e.g.
-        //   POST http://inventory-service:8083/inventory/shows/{saved.getId()}/initialize
-        //   body: { "totalSeats": saved.getTotalSeats() }
-        // Left as a TODO deliberately so Catalog Service stays fully testable on its own
-        // before Inventory Service exists.
+        // Forward the caller's own admin token downstream rather than inventing a
+        // separate service-to-service credential - Inventory Service enforces the
+        // same ADMIN check on this endpoint independently.
+        inventoryClient.initializeInventory(saved.getId(), saved.getTotalSeats(), authorizationHeader);
 
         return toResponse(saved, title, venue.getName());
     }

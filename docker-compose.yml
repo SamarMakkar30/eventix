@@ -48,6 +48,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      inventory-service:
+        condition: service_started
     networks:
       - eventix-net
 
@@ -58,10 +60,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/inventory_db
       SPRING_DATASOURCE_USERNAME: eventix
       SPRING_DATASOURCE_PASSWORD: eventix
+      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
     ports:
       - "8083:8083"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - eventix-net
 

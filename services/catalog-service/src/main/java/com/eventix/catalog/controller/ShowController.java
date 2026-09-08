@@ -19,8 +19,9 @@ public class ShowController {
     private final ShowService showService;
 
     @PostMapping
-    public ResponseEntity<ShowResponse> create(@Valid @RequestBody ShowRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(showService.create(request));
+    public ResponseEntity<ShowResponse> create(@Valid @RequestBody ShowRequest request,
+                                                @RequestHeader(value = "Authorization", required = false) String authorization) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(showService.create(request, authorization));
     }
 
     @GetMapping
