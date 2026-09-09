@@ -1,21 +1,24 @@
 # notification-service
 
-Sends (simulated/logged) booking confirmation notifications.
+Sends simulated, persisted, and logged booking notifications. **Phase 4 - implemented.**
 
-## Run locally
-
-```bash
-cd services/notification-service
-mvn spring-boot:run
-```
-
-Or as part of the full stack:
+## Endpoints (direct, port 8086 - via gateway: `/api/notifications/...`)
 
 ```bash
-docker compose up --build notification-service
+curl -X POST http://localhost:8086/notifications \
+  -H "Content-Type: application/json" -H "Authorization: Bearer <token>" \
+  -d '{"userEmail":"asha@example.com","bookingId":1,"subject":"Booking confirmed","message":"..."}'
+
+curl http://localhost:8086/notifications/1 -H "Authorization: Bearer <token>"
 ```
 
-## Endpoints (to be implemented - see project roadmap Phase referencing this service)
+"Sending" means: log it loudly (`docker compose logs notification-service`) and store
+a `Notification` row. Swapping in a real provider (SES, SendGrid, etc.) later only
+touches `NotificationService.send()` - callers never see the difference, since they
+only depend on the request/response DTOs.
 
-- `GET /actuator/health` - liveness/readiness (already works out of the box)
-- `GET /actuator/prometheus` - metrics for Prometheus scraping (already works out of the box)
+Booking Service sends a confirmation after a successful payment and a cancellation
+notification after inventory has been successfully released. It sends no notification
+for a simulated payment failure. Delivery is best-effort from Booking Service's point
+of view: a notification outage is logged but never reverses a confirmed payment or a
+completed cancellation.

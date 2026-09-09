@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -11,11 +13,6 @@ services:
       - ./infrastructure/postgres/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U eventix -d auth_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
     networks:
       - eventix-net
 
@@ -30,11 +27,9 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     networks:
       - eventix-net
-
   catalog-service:
     build: ./services/catalog-service
     container_name: catalog-service
@@ -46,13 +41,10 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      postgres:
-        condition: service_healthy
-      inventory-service:
-        condition: service_started
+      - postgres
+      - inventory-service
     networks:
       - eventix-net
-
   inventory-service:
     build: ./services/inventory-service
     container_name: inventory-service
@@ -64,11 +56,9 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     networks:
       - eventix-net
-
   booking-service:
     build: ./services/booking-service
     container_name: booking-service
@@ -76,13 +66,17 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/booking_db
       SPRING_DATASOURCE_USERNAME: eventix
       SPRING_DATASOURCE_PASSWORD: eventix
+      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
     ports:
       - "8084:8084"
     depends_on:
       - postgres
+      - catalog-service
+      - inventory-service
+      - payment-service
+      - notification-service
     networks:
       - eventix-net
-
   payment-service:
     build: ./services/payment-service
     container_name: payment-service
@@ -90,13 +84,13 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payment_db
       SPRING_DATASOURCE_USERNAME: eventix
       SPRING_DATASOURCE_PASSWORD: eventix
+      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
     ports:
       - "8085:8085"
     depends_on:
       - postgres
     networks:
       - eventix-net
-
   notification-service:
     build: ./services/notification-service
     container_name: notification-service
@@ -104,6 +98,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
       SPRING_DATASOURCE_USERNAME: eventix
       SPRING_DATASOURCE_PASSWORD: eventix
+      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
     ports:
       - "8086:8086"
     depends_on:

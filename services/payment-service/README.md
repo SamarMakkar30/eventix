@@ -1,21 +1,22 @@
 # payment-service
 
-Simulated payment processing; returns SUCCESS / FAILED / PENDING.
+Simulated payment processing. **Phase 4 - implemented.**
 
-## Run locally
-
-```bash
-cd services/payment-service
-mvn spring-boot:run
-```
-
-Or as part of the full stack:
+## Endpoints (direct, port 8085 - via gateway: `/api/payments/...`)
 
 ```bash
-docker compose up --build payment-service
+# Process a payment (called by Booking Service on your behalf, normally)
+curl -X POST http://localhost:8085/payments \
+  -H "Content-Type: application/json" -H "Authorization: Bearer <token>" \
+  -d '{"bookingId": 1, "amount": 500, "simulateFailure": false}'
+
+curl http://localhost:8085/payments/1 -H "Authorization: Bearer <token>"
 ```
 
-## Endpoints (to be implemented - see project roadmap Phase referencing this service)
+`simulateFailure` is a **demo/testing aid only** - it lets you deterministically
+trigger the failure path (and watch Booking Service's compensating inventory release
+happen) without depending on random chance during a live demo. A real payment
+integration would never let the client dictate success or failure like this - say so
+explicitly if asked in your viva, it shows you understand it's a simplification.
 
-- `GET /actuator/health` - liveness/readiness (already works out of the box)
-- `GET /actuator/prometheus` - metrics for Prometheus scraping (already works out of the box)
+All endpoints require a logged-in user (any role) - no public access, no admin distinction.

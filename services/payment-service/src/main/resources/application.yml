@@ -9,12 +9,16 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:eventix}
     password: ${SPRING_DATASOURCE_PASSWORD:eventix}
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
     show-sql: false
     properties:
       hibernate:
         format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET:dev-only-secret-please-change-me-before-any-real-deployment-32chars-min}
 
 management:
   endpoints:

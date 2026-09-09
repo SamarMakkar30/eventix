@@ -73,12 +73,11 @@ The gateway will be reachable at http://localhost:8080 once each service is impl
 
 ## Build roadmap
 
-- [x] Phase 0 - Repo scaffold, docker-compose, service skeletons  <- you are here
-- [ ] Phase 1 - Auth Service: register/login/JWT
-- [ ] Phase 2 - Catalog Service: movies/events CRUD
-- [ ] Phase 3 - Inventory Service: safe ticket decrement
-- [ ] Phase 4 - Booking Service: orchestration
-- [ ] Phase 5 - Payment + Notification Services (simulated)
+- [x] Phase 0 - Repo scaffold, docker-compose, service skeletons
+- [x] Phase 1 - Auth Service: register/login/JWT
+- [x] Phase 2 - Catalog Service: movies/events CRUD
+- [x] Phase 3 - Inventory Service: safe ticket decrement
+- [x] Phase 4 - Booking, Payment + Notification Services (simulated Saga orchestration)
 - [ ] Phase 6 - API Gateway routing, full local end-to-end flow
 - [ ] Phase 7 - React frontend
 - [ ] Phase 8 - Kubernetes manifests for all services + probes/resource limits
