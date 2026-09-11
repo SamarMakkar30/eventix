@@ -13,18 +13,25 @@ export function Brand() {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("eventix_theme") as "dark" | "light") || "dark");
   const { user, isAdmin, logout } = useAuth();
   const location = useLocation();
   const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
   useEffect(() => { setOpen(false); }, [location.pathname, location.search]);
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("eventix_theme", theme); }, [theme]);
+  useEffect(() => {
+    const updateScrollState = () => setScrolled(window.scrollY > 12);
+    updateScrollState();
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    return () => window.removeEventListener("scroll", updateScrollState);
+  }, []);
   const toggleTheme = () => setTheme((value) => value === "dark" ? "light" : "dark");
 
   if (isAuthPage) return <>{children}</>;
 
   return <div className="app-shell">
-    <header className="site-header"><div className="nav-wrap">
+    <header className={`site-header ${scrolled ? "site-header--scrolled" : ""}`}><div className="nav-wrap">
       <Brand />
       <nav className="desktop-nav" aria-label="Primary navigation">{navItems.map((item) => <NavLink key={item.to} to={item.to} className={({ isActive }) => isActive ? "active" : ""}>{item.label}</NavLink>)}</nav>
       <div className="nav-actions">
