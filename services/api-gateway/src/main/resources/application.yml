@@ -6,6 +6,22 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      # Without this, every request the React frontend makes gets blocked by the
+      # browser before it even reaches here - CORS is enforced client-side, and a
+      # REST client like curl or Postman would never reveal that the API "works"
+      # but the frontend "doesn't". Easy to lose an afternoon to if skipped.
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: ${CORS_ALLOWED_ORIGIN:http://localhost:3000}
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
       routes:
         - id: auth-service
           uri: http://auth-service:8081
@@ -45,7 +61,10 @@ spring:
             - StripPrefix=1
 
 management:
+  endpoint:
+    gateway:
+      enabled: true
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health,info,prometheus,gateway

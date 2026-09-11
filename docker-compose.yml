@@ -109,6 +109,8 @@ services:
   api-gateway:
     build: ./services/api-gateway
     container_name: api-gateway
+    environment:
+      CORS_ALLOWED_ORIGIN: http://localhost:3000
     ports:
       - "8080:8080"
     depends_on:
