@@ -1,0 +1,6 @@
+import { CalendarCheck2, Mail, ShieldCheck, UserRound } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/auth-context";
+import { initials } from "../lib/utils";
+
+export function ProfilePage() { const { user, isAdmin } = useAuth(); if (!user) return null; return <div className="page container"><div className="page-intro compact"><p className="eyebrow">Account</p><h1>Your Eventix profile.</h1><p>Your details, your bookings, your next great plan.</p></div><div className="profile-grid"><section className="profile-card"><div className="profile-avatar">{initials(user.name)}</div><div><span className="eyebrow">{user.role === "ADMIN" ? "Administrator" : "Member"}</span><h2>{user.name}</h2><p><Mail size={16} />{user.email}</p></div></section><section className="account-links"><Link to="/bookings"><CalendarCheck2 /><div><h3>My bookings</h3><p>See your upcoming plans and booking history.</p></div></Link>{isAdmin && <Link to="/admin"><ShieldCheck /><div><h3>Admin studio</h3><p>Manage catalogue content and experiences.</p></div></Link>}<div><UserRound /><div><h3>Account security</h3><p>Your session is secured using your Eventix sign-in token.</p></div></div></section></div></div>; }

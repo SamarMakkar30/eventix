@@ -78,8 +78,8 @@ The gateway will be reachable at http://localhost:8080 once each service is impl
 - [x] Phase 2 - Catalog Service: movies/events CRUD
 - [x] Phase 3 - Inventory Service: safe ticket decrement
 - [x] Phase 4 - Booking, Payment + Notification Services (simulated Saga orchestration)
-- [ ] Phase 6 - API Gateway routing, full local end-to-end flow
-- [ ] Phase 7 - React frontend
+- [x] Phase 6 - API Gateway routing, full local end-to-end flow
+- [x] Phase 7 - React frontend
 - [ ] Phase 8 - Kubernetes manifests for all services + probes/resource limits
 - [ ] Phase 9 - Terraform: provision EC2 (k3s) + S3, deploy cluster there
 - [ ] Phase 10 - HPA + Locust load test (the autoscaling demo)
