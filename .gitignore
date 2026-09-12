@@ -5,6 +5,8 @@ frontend/dist/
 frontend/*.tsbuildinfo
 frontend/vite.config.js
 frontend/vite.config.d.ts
+docker-compose.phase5-backup.yml
+services/api-gateway-phase5-backup/
 .env
 *.log
 .terraform/
