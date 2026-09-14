@@ -15,6 +15,7 @@ import java.util.List;
 public class MovieService {
 
     private final MovieRepository movieRepository;
+    private final S3UploadService s3UploadService;
 
     public MovieResponse create(MovieRequest request) {
         Movie movie = Movie.builder()
@@ -54,6 +55,12 @@ public class MovieService {
             throw new ResourceNotFoundException("Movie " + id + " not found");
         }
         movieRepository.deleteById(id);
+    }
+
+    public MovieResponse updatePoster(Long id, MultipartFile file) {
+        Movie movie = getOrThrow(id);
+        movie.setPosterUrl(s3UploadService.upload("posters", file));
+        return toResponse(movieRepository.save(movie));
     }
 
     Movie getOrThrow(Long id) {

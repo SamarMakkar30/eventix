@@ -5,3 +5,5 @@ metadata:
   namespace: eventix
 data:
   SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/catalog_db"
+  S3_BUCKET_NAME: "replace-with-terraform-output"
+  AWS_REGION: "ap-south-1"

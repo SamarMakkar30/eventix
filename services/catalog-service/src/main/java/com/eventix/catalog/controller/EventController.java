@@ -18,6 +18,11 @@ public class EventController {
 
     private final EventService eventService;
 
+    @PostMapping("/{id}/banner")
+    public ResponseEntity<EventResponse> uploadBanner(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(eventService.updateBanner(id, file));
+    }
+
     @PostMapping
     public ResponseEntity<EventResponse> create(@Valid @RequestBody EventRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.create(request));

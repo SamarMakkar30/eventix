@@ -29,6 +29,16 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, "You do not have permission to perform this action");
     }
 
+    @ExceptionHandler(InvalidUploadException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidUpload(InvalidUploadException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(StorageUploadException.class)
+    public ResponseEntity<Map<String, Object>> handleStorageUpload(StorageUploadException ex) {
+        return buildResponse(HttpStatus.BAD_GATEWAY, ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();

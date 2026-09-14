@@ -12,6 +12,7 @@ services/api-gateway-phase5-backup/
 .terraform/
 *.tfstate
 *.tfstate.backup
+*.tfstate.*
 .idea/
 .vscode/
 *.iml

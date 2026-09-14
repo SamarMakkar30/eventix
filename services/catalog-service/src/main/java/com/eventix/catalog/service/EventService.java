@@ -15,6 +15,7 @@ import java.util.List;
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final S3UploadService s3UploadService;
 
     public EventResponse create(EventRequest request) {
         Event event = Event.builder()
@@ -48,6 +49,12 @@ public class EventService {
             throw new ResourceNotFoundException("Event " + id + " not found");
         }
         eventRepository.deleteById(id);
+    }
+
+    public EventResponse updateBanner(Long id, MultipartFile file) {
+        Event event = getOrThrow(id);
+        event.setBannerUrl(s3UploadService.upload("banners", file));
+        return toResponse(eventRepository.save(event));
     }
 
     Event getOrThrow(Long id) {

@@ -15,6 +15,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+aws:
+  s3:
+    bucket-name: ${S3_BUCKET_NAME:eventix-assets}
+    region: ${AWS_REGION:ap-south-1}
 
 jwt:
   # Must match auth-service's JWT_SECRET exactly - it validates tokens it did not issue.

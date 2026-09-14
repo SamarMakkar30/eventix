@@ -18,6 +18,11 @@ public class MovieController {
 
     private final MovieService movieService;
 
+    @PostMapping("/{id}/poster")
+    public ResponseEntity<MovieResponse> uploadPoster(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(movieService.updatePoster(id, file));
+    }
+
     @PostMapping
     public ResponseEntity<MovieResponse> create(@Valid @RequestBody MovieRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(movieService.create(request));
