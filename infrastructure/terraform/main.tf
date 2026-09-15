@@ -25,7 +25,7 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_security_group" "eventix_sg" {
   name        = "eventix-sg"
-  description = "SSH, HTTP/S, Kubernetes API, and NodePort range"
+  description = "SSH, HTTP/S, Kubernetes API, and Eventix NodePorts"
 
   ingress {
     description = "SSH"
@@ -52,19 +52,27 @@ resource "aws_security_group" "eventix_sg" {
   }
 
   ingress {
-    description = "Kubernetes API (k3s)"
-    from_port   = 6443
-    to_port     = 6443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "Kubernetes API (k3s)"
+    from_port       = 6443
+    to_port         = 6443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.jenkins_sg.id]
   }
 
   ingress {
-    description = "Kubernetes NodePort range"
-    from_port   = 30000
-    to_port     = 32767
+    description = "API Gateway NodePort"
+    from_port   = 30080
+    to_port     = 30080
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.allowed_nodeport_cidr]
+  }
+
+  ingress {
+    description = "Frontend NodePort"
+    from_port   = 30300
+    to_port     = 30300
+    protocol    = "tcp"
+    cidr_blocks = [var.allowed_nodeport_cidr]
   }
 
   egress {
