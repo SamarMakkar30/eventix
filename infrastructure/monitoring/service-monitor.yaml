@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: eventix-services
+  namespace: eventix
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - eventix
+  selector:
+    matchLabels:
+      prometheus-scrape: "true"
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s

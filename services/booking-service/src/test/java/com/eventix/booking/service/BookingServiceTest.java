@@ -12,6 +12,8 @@ import com.eventix.booking.model.Booking;
 import com.eventix.booking.model.BookingStatus;
 import com.eventix.booking.repository.BookingRepository;
 import com.eventix.booking.security.JwtService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,6 +41,8 @@ class BookingServiceTest {
     @Mock private InventoryClient inventoryClient;
     @Mock private PaymentClient paymentClient;
     @Mock private NotificationClient notificationClient;
+    @Mock private MeterRegistry meterRegistry;
+    @Mock private Counter counter;
 
     @InjectMocks private BookingService bookingService;
 
@@ -53,6 +57,7 @@ class BookingServiceTest {
         when(jwtService.extractEmail("test-token")).thenReturn("customer@example.com");
         when(catalogClient.getShow(2L, AUTHORIZATION)).thenReturn(show);
         when(paymentClient.charge(anyLong(), any(), eq(true), eq(AUTHORIZATION))).thenReturn(failedPayment);
+        when(meterRegistry.counter(anyString())).thenReturn(counter);
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
             Booking booking = invocation.getArgument(0);
             if (booking.getId() == null) {

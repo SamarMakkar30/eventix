@@ -1,0 +1,103 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request rate by service",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"eventix\"}[1m])) by (application)", "legendFormat": "{{application}}"}],
+      "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
+    },
+    {
+      "id": 2,
+      "title": "HTTP 5xx error rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"eventix\",status=~\"5..\"}[1m])) by (application)", "legendFormat": "{{application}}"}],
+      "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
+    },
+    {
+      "id": 3,
+      "title": "p95 request latency",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"refId": "A", "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"eventix\"}[5m])) by (le, application))", "legendFormat": "{{application}}"}],
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
+    },
+    {
+      "id": 4,
+      "title": "CPU usage by container",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"refId": "A", "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"eventix\",container!=\"\"}[2m])) by (container)", "legendFormat": "{{container}}"}],
+      "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
+    },
+    {
+      "id": 5,
+      "title": "Memory usage by container",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"refId": "A", "expr": "sum(container_memory_working_set_bytes{namespace=\"eventix\",container!=\"\"}) by (container)", "legendFormat": "{{container}}"}],
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
+    },
+    {
+      "id": 6,
+      "title": "Deployment replicas",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"refId": "A", "expr": "kube_deployment_status_replicas{namespace=\"eventix\"}", "legendFormat": "{{deployment}}"}],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
+    },
+    {
+      "id": 7,
+      "title": "Confirmed bookings / min",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"refId": "A", "expr": "sum(rate(eventix_bookings_confirmed_total{namespace=\"eventix\"}[1m])) * 60", "legendFormat": "confirmed/min"}],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
+    },
+    {
+      "id": 8,
+      "title": "Payment failures / min",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [{"refId": "A", "expr": "sum(rate(eventix_bookings_payment_failed_total{namespace=\"eventix\"}[1m])) * 60", "legendFormat": "failures/min"}],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["eventix", "prometheus", "kubernetes"],
+  "templating": {
+    "list": [{
+      "name": "datasource",
+      "label": "Prometheus",
+      "type": "datasource",
+      "query": "prometheus",
+      "current": {}
+    }]
+  },
+  "time": {"from": "now-15m", "to": "now"},
+  "timezone": "browser",
+  "title": "Eventix - Live Traffic & Autoscaling",
+  "version": 1
+}

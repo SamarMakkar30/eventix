@@ -14,6 +14,7 @@ import com.eventix.booking.model.Booking;
 import com.eventix.booking.model.BookingStatus;
 import com.eventix.booking.repository.BookingRepository;
 import com.eventix.booking.security.JwtService;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -48,6 +49,7 @@ public class BookingService {
     private final InventoryClient inventoryClient;
     private final PaymentClient paymentClient;
     private final NotificationClient notificationClient;
+    private final MeterRegistry meterRegistry;
 
     // Do not roll the local booking state back when the simulated payment is declined:
     // the PAYMENT_FAILED record is the audit trail for a completed compensation attempt.
@@ -87,6 +89,7 @@ public class BookingService {
             booking.setStatus(BookingStatus.CONFIRMED);
             booking.setPaymentId(payment.getId());
             booking = bookingRepository.save(booking);
+            meterRegistry.counter("eventix_bookings_confirmed_total").increment();
 
             // 4. Notification - best-effort, never blocks a successful booking.
             notificationClient.sendBookingConfirmation(
@@ -111,6 +114,7 @@ public class BookingService {
             }
             booking.setStatus(BookingStatus.PAYMENT_FAILED);
             bookingRepository.save(booking);
+            meterRegistry.counter("eventix_bookings_payment_failed_total").increment();
             throw new PaymentFailedException("Payment failed for booking " + booking.getId()
                     + (compensationSucceeded
                     ? " - seats have been released back to inventory"

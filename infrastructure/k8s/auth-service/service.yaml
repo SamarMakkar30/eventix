@@ -3,10 +3,14 @@ kind: Service
 metadata:
   name: auth-service
   namespace: eventix
+  labels:
+    app: auth-service
+    prometheus-scrape: "true"
 spec:
   selector:
     app: auth-service
   ports:
     - port: 8081
+      name: http
       targetPort: 8081
   type: ClusterIP
