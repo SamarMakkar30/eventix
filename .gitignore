@@ -20,3 +20,18 @@ services/api-gateway-phase5-backup/
 .vscode/
 *.iml
 .DS_Store
+# Local audit / validation artifacts
+check_build.py
+configure_and_trigger.py
+promote.py
+seed_data.py
+trigger.py
+trigger_jenkins.py
+verify_flow.py
+jenkins-console.txt
+# Extracted/reference bundles
+eventix-COMPLETE-PROJECT/
+eventix-phase13-security-and-demo/
+# Python cache
+__pycache__/
+*.pyc
