@@ -56,13 +56,13 @@ eventix/
     payment-service/
     notification-service/
   infrastructure/
-    terraform/              AWS EC2 (k3s host) + S3, as code
     k8s/                    Kubernetes manifests (example: auth-service)
+  terraform/                AWS EC2 (k3s host) + S3, as code
   jenkins/                  Jenkinsfile template
   docker-compose.yml        Local dev environment (all services + Postgres)
 ```
 
-## Running locally (Phase 1-7)
+## Running locally (Phases 1-11)
 
 ```bash
 docker compose up --build
@@ -80,10 +80,10 @@ The gateway will be reachable at http://localhost:8080 once each service is impl
 - [x] Phase 4 - Booking, Payment + Notification Services (simulated Saga orchestration)
 - [x] Phase 6 - API Gateway routing, full local end-to-end flow
 - [x] Phase 7 - React frontend
-- [ ] Phase 8 - Kubernetes manifests for all services + probes/resource limits
-- [ ] Phase 9 - Terraform: provision EC2 (k3s) + S3, deploy cluster there
-- [ ] Phase 10 - HPA + Locust load test (the autoscaling demo)
-- [ ] Phase 11 - Prometheus + Grafana dashboards
+- [x] Phase 8 - Kubernetes manifests for all services + probes/resource limits
+- [x] Phase 9 - Terraform: provision EC2 (k3s) + S3, deploy cluster there
+- [x] Phase 10 - HPA + Locust load test (the autoscaling demo)
+- [x] Phase 11 - Prometheus + Grafana dashboards
 - [ ] Phase 12 - Jenkins pipeline + GitHub webhook
 - [ ] Phase 13 - Security hardening, docs, demo rehearsal
 

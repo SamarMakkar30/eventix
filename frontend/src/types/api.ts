@@ -33,7 +33,8 @@ export interface Inventory {
   availableSeats: number;
 }
 
-export type BookingStatus = "PENDING" | "CONFIRMED" | "PAYMENT_FAILED" | "CANCELLED";
+export type BookingStatus =
+  "PENDING" | "CONFIRMED" | "PAYMENT_FAILED" | "CANCELLED";
 
 export interface Booking {
   id: number;

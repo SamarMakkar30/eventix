@@ -1,4 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { api } from "../api/eventix";
 import type { AuthResponse, User } from "../types/api";
 
@@ -39,16 +46,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return result.user;
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => saveSession(await api.login(email, password)), [saveSession]);
-  const register = useCallback(async (name: string, email: string, password: string) => saveSession(await api.register(name, email, password)), [saveSession]);
+  const login = useCallback(
+    async (email: string, password: string) =>
+      saveSession(await api.login(email, password)),
+    [saveSession],
+  );
+  const register = useCallback(
+    async (name: string, email: string, password: string) =>
+      saveSession(await api.register(name, email, password)),
+    [saveSession],
+  );
 
   useEffect(() => {
     const handleUnauthorized = () => logout();
     window.addEventListener("eventix:unauthorized", handleUnauthorized);
-    return () => window.removeEventListener("eventix:unauthorized", handleUnauthorized);
+    return () =>
+      window.removeEventListener("eventix:unauthorized", handleUnauthorized);
   }, [logout]);
 
-  const value = useMemo(() => ({ user, isAuthenticated: Boolean(user), isAdmin: user?.role === "ADMIN", login, register, logout }), [user, login, register, logout]);
+  const value = useMemo(
+    () => ({
+      user,
+      isAuthenticated: Boolean(user),
+      isAdmin: user?.role === "ADMIN",
+      login,
+      register,
+      logout,
+    }),
+    [user, login, register, logout],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
