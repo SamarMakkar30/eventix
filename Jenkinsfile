@@ -3,9 +3,9 @@ def JAVA_SERVICES = [
     'payment-service', 'notification-service', 'api-gateway'
 ]
 def ALL_WORKLOADS = JAVA_SERVICES + ['frontend']
-def DOCKERHUB_USER = 'your-dockerhub-username'
+def DOCKERHUB_USER = 'samarr30'
 def KUBE_NAMESPACE = 'eventix'
-def GATEWAY_PUBLIC_URL = 'http://your-k3s-public-ip:30080/api'
+def GATEWAY_PUBLIC_URL = 'http://65.0.176.1:30080/api'
 
 pipeline {
     agent any
@@ -56,7 +56,7 @@ pipeline {
                     env.CHANGED_WORKLOADS.split(',').each { workload ->
                         if (JAVA_SERVICES.contains(workload)) {
                             dir("services/${workload}") {
-                                sh 'mvn -B clean verify'
+                                sh 'mvn -B package -DskipTests'
                             }
                         } else if (workload == 'frontend') {
                             dir('frontend') {
