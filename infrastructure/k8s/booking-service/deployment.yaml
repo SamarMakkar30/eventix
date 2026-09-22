@@ -6,7 +6,12 @@ metadata:
   labels:
     app: booking-service
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
   selector:
     matchLabels:
       app: booking-service
@@ -17,7 +22,7 @@ spec:
     spec:
       containers:
         - name: booking-service
-          image: <your-dockerhub-username>/booking-service:latest
+          image: samarr30/booking-service:latest
           ports:
             - containerPort: 8084
           envFrom:
@@ -27,7 +32,7 @@ spec:
                 name: booking-service-secret
           resources:
             requests:
-              cpu: "250m"
+              cpu: "100m"
               memory: "256Mi"
             limits:
               cpu: "1"
@@ -36,11 +41,11 @@ spec:
             httpGet:
               path: /actuator/health/readiness
               port: 8084
-            initialDelaySeconds: 15
+            initialDelaySeconds: 60
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8084
-            initialDelaySeconds: 30
+            initialDelaySeconds: 90
             periodSeconds: 15

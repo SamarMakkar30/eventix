@@ -6,7 +6,12 @@ metadata:
   labels:
     app: api-gateway
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
   selector:
     matchLabels:
       app: api-gateway
@@ -17,7 +22,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: <your-dockerhub-username>/api-gateway:latest
+          image: samarr30/api-gateway:latest
           ports:
             - containerPort: 8080
           envFrom:
@@ -25,7 +30,7 @@ spec:
                 name: api-gateway-config
           resources:
             requests:
-              cpu: "250m"
+              cpu: "100m"
               memory: "256Mi"
             limits:
               cpu: "1"
@@ -36,11 +41,11 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 15
+            initialDelaySeconds: 60
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 90
             periodSeconds: 15

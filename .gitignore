@@ -13,6 +13,9 @@ services/api-gateway-phase5-backup/
 *.tfstate
 *.tfstate.backup
 *.tfstate.*
+**/secret.yaml
+**/*kubeconfig*
+*.pem
 .idea/
 .vscode/
 *.iml

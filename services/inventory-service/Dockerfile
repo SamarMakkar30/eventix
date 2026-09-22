@@ -9,6 +9,8 @@ RUN mvn -B clean package -DskipTests
 # --- Runtime stage ---
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
+RUN addgroup -S eventix && adduser -S eventix -G eventix
 COPY --from=build /app/target/*.jar app.jar
+USER eventix
 EXPOSE 8083
 ENTRYPOINT ["java", "-jar", "app.jar"]

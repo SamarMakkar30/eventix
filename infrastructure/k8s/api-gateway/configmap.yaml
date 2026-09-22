@@ -4,7 +4,4 @@ metadata:
   name: api-gateway-config
   namespace: eventix
 data:
-  # Update this once Phase 9 (Terraform) gives you the EC2 node's public IP -
-  # e.g. "http://<ec2-public-ip>:30300" once the frontend is deployed there too.
-  # Until then this default only works for local testing via port-forward.
-  CORS_ALLOWED_ORIGIN: "http://localhost:3000"
+  CORS_ALLOWED_ORIGIN: "http://65.0.176.1:30300"

@@ -6,7 +6,12 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
   selector:
     matchLabels:
       app: frontend
@@ -17,7 +22,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: <your-dockerhub-username>/frontend:latest
+          image: samarr30/frontend:latest
           ports:
             - containerPort: 3000
           resources:
