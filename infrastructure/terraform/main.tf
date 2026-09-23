@@ -87,6 +87,7 @@ resource "aws_instance" "k3s_node" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
   key_name               = var.key_name
+  iam_instance_profile   = aws_iam_instance_profile.eventix_ec2_profile.name
   vpc_security_group_ids = [aws_security_group.eventix_sg.id]
   user_data              = file("${path.module}/k3s-install.sh")
 
@@ -101,4 +102,63 @@ resource "aws_instance" "k3s_node" {
 
 resource "aws_s3_bucket" "eventix_assets" {
   bucket = var.s3_bucket_name
+}
+resource "aws_iam_role" "eventix_ec2_role" {
+  name = "eventix-ec2-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+resource "aws_iam_role_policy" "eventix_s3_access" {
+  name = "eventix-s3-access"
+  role = aws_iam_role.eventix_ec2_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ListBucket"
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = aws_s3_bucket.eventix_assets.arn
+      },
+      {
+        Sid    = "ReadWriteObjects"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "${aws_s3_bucket.eventix_assets.arn}/*"
+      }
+    ]
+  })
+}
+resource "aws_iam_instance_profile" "eventix_ec2_profile" {
+  name = "eventix-ec2-profile"
+  role = aws_iam_role.eventix_ec2_role.name
+}
+resource "aws_s3_bucket_public_access_block" "eventix_assets" {
+  bucket                  = aws_s3_bucket.eventix_assets.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+resource "aws_s3_bucket_server_side_encryption_configuration" "eventix_assets" {
+  bucket = aws_s3_bucket.eventix_assets.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }

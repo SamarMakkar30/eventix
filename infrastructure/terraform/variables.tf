@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "instance_type" {
   description = "EC2 instance size for the k3s node. t2.micro (free tier) is too small to run 6 Java services + Postgres + k3s - use at least t3.medium."
   type        = string
-  default     = "t3.medium"
+  default     = "m7i-flex.large"
 }
 
 variable "key_name" {
