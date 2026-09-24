@@ -5,7 +5,7 @@ def JAVA_SERVICES = [
 def ALL_WORKLOADS = JAVA_SERVICES + ['frontend']
 def DOCKERHUB_USER = 'samarr30'
 def KUBE_NAMESPACE = 'eventix'
-def GATEWAY_PUBLIC_URL = 'http://65.0.176.1:30080/api'
+def GATEWAY_PUBLIC_URL = 'http://65.0.176.1:30080'
 
 pipeline {
     agent any
