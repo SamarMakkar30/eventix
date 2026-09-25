@@ -84,9 +84,9 @@ export function ShowDetailPage() {
     ...(available !== undefined
       ? [
           {
-            icon: <Users />,
+            icon: <Ticket />,
             label: soldOut ? "Sold out" : `${available} tickets left`,
-            cls: soldOut ? "sold-out" : "available",
+            cls: soldOut ? "sold-out" : undefined,
           },
         ]
       : []),
@@ -133,16 +133,25 @@ export function ShowDetailPage() {
           </motion.div>
 
           <div className="detail-content">
-            <motion.div
+            <motion.nav
+              aria-label="Breadcrumb"
+              className="breadcrumb"
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.45 }}
             >
-              <Link className="breadcrumb" to="/shows">
-                Explore <span>/</span>{" "}
+              <Link to="/shows">Explore</Link>
+              <span aria-hidden="true">/</span>
+              <Link
+                to={
+                  data.showType === "MOVIE"
+                    ? "/shows?type=MOVIE"
+                    : "/shows?type=EVENT"
+                }
+              >
                 {data.showType === "MOVIE" ? "Film" : "Live event"}
               </Link>
-            </motion.div>
+            </motion.nav>
 
             <motion.p
               className="eyebrow"

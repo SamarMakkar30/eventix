@@ -6,7 +6,6 @@ import {
   CalendarDays,
   Clapperboard,
   MapPin,
-  Play,
   Sparkles,
   Star,
   Ticket,
@@ -190,7 +189,7 @@ export function HomePage() {
                     Book tickets <ArrowRight size={17} />
                   </Link>
                   <Link className="button button--ghost" to="/shows">
-                    <Play size={16} fill="currentColor" />
+                    <ArrowRight size={16} />
                     Explore experiences
                   </Link>
                 </motion.div>
@@ -242,16 +241,15 @@ export function HomePage() {
                 <span className="eyebrow">From</span>
                 <strong>{money(featured.price)}</strong>
                 <span>per ticket</span>
-                <div className="ticket-notch ticket-notch--top" />
-                <div className="ticket-notch ticket-notch--bottom" />
               </motion.div>
             )}
             <motion.div
               className="hero-orbit"
-              animate={{ rotate: [15, 25, 15] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 }}
             >
-              <Sparkles size={17} /> <span>CURATED FOR YOU</span>
+              <Sparkles size={15} /> <span>Curated for you</span>
             </motion.div>
           </motion.div>
         </div>
@@ -367,7 +365,7 @@ export function HomePage() {
               heading: "Your next great yes is nearby.",
               count: shows.data?.length || 0,
               suffix: "upcoming shows curated for you",
-              cta: "See everything on",
+              cta: "Explore all shows",
             },
           ].map((card) => (
             <motion.div key={card.to} variants={staggerItem}>

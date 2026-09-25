@@ -1,4 +1,4 @@
-import { ArrowUpRight, CalendarDays, MapPin, Users } from "lucide-react";
+import { CalendarDays, MapPin, Ticket, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { dateTime, money } from "../lib/utils";
@@ -89,11 +89,10 @@ export function ShowCard({
             {money(show.price)} <small>/ ticket</small>
           </strong>
           <Link
-            className="card-arrow"
+            className="card-book-btn"
             to={`/shows/${show.id}`}
-            aria-label={`Book ${show.title}`}
           >
-            <ArrowUpRight size={18} />
+            <Ticket size={14} /> Book now
           </Link>
         </div>
       </div>

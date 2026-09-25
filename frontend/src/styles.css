@@ -88,6 +88,17 @@ textarea:focus-visible {
 main {
   min-height: calc(100vh - 240px);
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 h1,
 h2,
 h3,
@@ -123,10 +134,9 @@ em {
 .eyebrow {
   color: var(--primary);
   font:
-    500 0.69rem/1.3 "DM Mono",
+    500 0.8rem/1.35 "DM Mono",
     monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.08em;
 }
 .button {
   min-height: 46px;
@@ -301,11 +311,19 @@ em {
 }
 .desktop-nav a,
 .nav-text {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 700;
   position: relative;
-  transition: color 0.25s;
+  transition: color 0.25s, background-color 0.25s;
 }
 .desktop-nav a::after {
   content: "";
@@ -329,6 +347,21 @@ em {
 .desktop-nav a.active,
 .nav-text:hover {
   color: var(--foreground);
+}
+.nav-text--secondary {
+  color: var(--faint) !important;
+  font-weight: 500 !important;
+  font-size: 0.8rem !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.85;
+}
+.nav-text--secondary:hover {
+  color: var(--foreground) !important;
+  opacity: 1;
 }
 .nav-actions {
   display: flex;
@@ -512,6 +545,9 @@ em {
   gap: 12px;
   margin-top: 32px;
 }
+.hero__actions .button:first-child {
+  min-width: 170px;
+}
 .hero__art {
   width: min(100%, 362px);
   justify-self: end;
@@ -528,14 +564,16 @@ em {
 }
 .hero-ticket {
   position: absolute;
-  left: -58px;
-  bottom: 47px;
+  left: -24px;
+  bottom: 30px;
   z-index: 2;
   display: grid;
-  padding: 14px 17px;
+  padding: 12px 18px;
   min-width: 116px;
   background: var(--surface);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-elevated);
 }
 .hero-ticket strong {
   font-size: 1.32rem;
@@ -543,45 +581,31 @@ em {
 }
 .hero-ticket > span:last-of-type {
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
 }
-.ticket-notch {
+.hero-orbit,
+.hero-curated-badge {
   position: absolute;
-  left: -5px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--background);
-}
-.ticket-notch--top {
-  top: -5px;
-}
-.ticket-notch--bottom {
-  bottom: -5px;
-}
-.hero-orbit {
-  position: absolute;
-  top: 20px;
-  right: -74px;
-  width: 100px;
-  height: 100px;
+  top: 24px;
+  right: -24px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
   border: 1px solid var(--border-strong);
-  border-radius: 50%;
-  display: grid;
-  place-content: center;
-  text-align: center;
-  gap: 4px;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
   color: var(--primary);
-  transform: rotate(15deg);
-}
-.hero-orbit svg {
-  margin: auto;
-}
-.hero-orbit span {
   font:
-    500 0.48rem "DM Mono",
+    500 0.72rem "DM Mono",
     monospace;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.06em;
+}
+.hero-orbit svg,
+.hero-curated-badge svg {
+  color: var(--primary);
 }
 .scroll-cue {
   position: absolute;
@@ -629,8 +653,9 @@ em {
 }
 .shows-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
+  max-width: 100%;
 }
 .show-card {
   min-width: 0;
@@ -644,15 +669,13 @@ em {
     box-shadow 0.35s ease;
 }
 .show-card--featured {
-  border-color: transparent;
+  border-color: color-mix(in srgb, var(--primary) 38%, transparent);
   background:
-    linear-gradient(var(--surface), var(--surface)) padding-box,
-    conic-gradient(from 140deg, var(--primary), var(--accent), var(--primary), var(--success), var(--primary)) border-box;
-  background-size: 100% 100%, 240% 240%;
-  animation: featuredBorder 7s linear infinite;
-}
-@keyframes featuredBorder {
-  to { background-position: 0 0, 240% 240%; }
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--primary) 6%, var(--surface)),
+      var(--surface) 70%
+    );
 }
 .show-card:hover {
   transform: translateY(-7px);
@@ -698,7 +721,7 @@ em {
 }
 .show-card__body .eyebrow {
   color: var(--faint);
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -760,6 +783,27 @@ em {
   transform: rotate(45deg);
   box-shadow: 0 0 16px rgba(243, 180, 63, 0.25);
 }
+.card-book-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-weight: 800;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  transition:
+    transform 0.25s var(--transition-smooth),
+    background 0.25s,
+    box-shadow 0.25s;
+}
+.card-book-btn:hover {
+  background: #ffc650;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(243, 180, 63, 0.3);
+}
 .skeleton-card {
   padding: 0;
   overflow: hidden;
@@ -800,6 +844,7 @@ em {
   display: grid;
   grid-template-columns: 0.8fr 1.2fr;
   gap: 90px;
+  align-items: start;
   padding-block: 100px;
 }
 .experience-band h2 {
@@ -810,10 +855,14 @@ em {
 }
 .experience-list > div {
   display: grid;
-  grid-template-columns: 50px 1fr;
-  gap: 18px;
-  padding: 17px 0;
+  grid-template-columns: 32px 1fr;
+  gap: 12px;
+  padding: 13px 0;
   border-top: 1px solid var(--border);
+}
+.experience-list > div:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 .experience-list > div:last-child {
   border-bottom: 1px solid var(--border);
@@ -821,7 +870,7 @@ em {
 .experience-list > div > span {
   color: var(--primary);
   font:
-    500 0.68rem "DM Mono",
+    500 0.72rem "DM Mono",
     monospace;
 }
 .experience-list h3 {
@@ -946,13 +995,13 @@ em {
 .curated-card > svg {
   width: 28px;
   height: 28px;
-  margin-bottom: auto;
   color: var(--primary);
   filter: drop-shadow(0 0 8px rgba(243, 180, 63, 0.3));
 }
 .curated-card .eyebrow {
-  margin: 27px 0 8px;
+  margin: 18px 0 8px;
   color: rgba(255, 255, 255, 0.64);
+  font-size: 0.72rem;
 }
 .curated-card h3 {
   max-width: 260px;
@@ -968,6 +1017,7 @@ em {
   display: flex;
   align-items: center;
   gap: 7px;
+  margin-top: auto;
   font-size: 0.76rem;
   transition: gap 0.3s;
 }
@@ -1156,22 +1206,53 @@ em {
 .filters .field select {
   background: var(--surface-raised);
 }
+.filters .search-field {
+  height: 45px;
+  min-height: 45px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-raised);
+  box-sizing: border-box;
+}
+.filters .search-field:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+}
 .filter-mark {
-  display: flex;
+  height: 45px;
+  display: inline-flex;
   align-items: center;
   gap: 7px;
   color: var(--faint);
   font-size: 0.72rem;
   white-space: nowrap;
-  padding-bottom: 13px;
+  padding: 0 4px;
 }
 .results-count {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 16px;
+  flex-wrap: wrap;
   color: var(--muted);
   font-size: 0.76rem;
   margin: 0 0 18px;
+}
+.results-count__main {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.results-count__availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--faint);
+}
+.results-count__availability::before {
+  content: "•";
+  margin-right: 2px;
+  color: var(--border-strong);
 }
 .state-card {
   display: grid;
@@ -1242,12 +1323,17 @@ em {
 .detail-content .breadcrumb,
 .booking-header .breadcrumb {
   display: inline-flex;
-  gap: 9px;
+  align-items: center;
+  gap: 8px;
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   margin-bottom: 40px;
 }
-.breadcrumb:hover {
+.breadcrumb a {
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.breadcrumb a:hover {
   color: var(--primary);
 }
 .breadcrumb span {
@@ -2721,7 +2807,6 @@ em {
   display: flex;
   align-items: center;
   gap: 5px;
-  margin-left: auto;
   color: var(--faint);
 }
 .show-card__availability {

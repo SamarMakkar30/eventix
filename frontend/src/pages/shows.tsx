@@ -210,20 +210,23 @@ export function ShowsPage() {
         </div>
       ) : filtered.length ? (
         <>
-          <motion.p
+          <h2 className="sr-only">Available experiences</h2>
+          <motion.div
             className="results-count"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <Filter size={15} />
-            {filtered.length}{" "}
-            {filtered.length === 1 ? "experience" : "experiences"} to explore{" "}
-            <span>
+            <span className="results-count__main">
+              <Filter size={15} />
+              {filtered.length}{" "}
+              {filtered.length === 1 ? "experience" : "experiences"} to explore
+            </span>
+            <span className="results-count__availability">
               <CalendarDays size={14} />
               Live availability shown where configured
             </span>
-          </motion.p>
+          </motion.div>
           <AnimatePresence mode="popLayout">
             <motion.div className="shows-grid" layout>
               {filtered.map((show, index) => (

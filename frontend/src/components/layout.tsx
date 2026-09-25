@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Menu, Moon, Sun, Ticket, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../context/auth-context";
 import { initials } from "../lib/utils";
+import type { Show } from "../types/api";
 
 const navItems = [
   { to: "/shows", label: "Explore" },
@@ -52,6 +54,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const toggleTheme = () =>
     setTheme((value) => (value === "dark" ? "light" : "dark"));
 
+  const queryClient = useQueryClient();
+  const isItemActive = (item: { to: string; label: string }) => {
+    const currentPath = location.pathname;
+    const search = location.search;
+
+    if (item.label === "Explore") {
+      return currentPath === "/shows" && (!search || search === "?type=ALL");
+    }
+
+    if (item.label === "Movies") {
+      if (currentPath === "/shows" && search.includes("type=MOVIE")) return true;
+      if (currentPath.startsWith("/shows/")) {
+        const showId = currentPath.split("/")[2];
+        const showData = showId ? queryClient.getQueryData<Show>(["show", showId]) : null;
+        return showData ? showData.showType === "MOVIE" : true;
+      }
+      return false;
+    }
+
+    if (item.label === "Events") {
+      if (currentPath === "/shows" && search.includes("type=EVENT")) return true;
+      if (currentPath.startsWith("/shows/")) {
+        const showId = currentPath.split("/")[2];
+        const showData = showId ? queryClient.getQueryData<Show>(["show", showId]) : null;
+        return showData?.showType === "EVENT";
+      }
+      return false;
+    }
+
+    return false;
+  };
+
   if (isAuthPage) return <>{children}</>;
 
   return (
@@ -62,15 +96,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="nav-wrap">
           <Brand />
           <nav className="desktop-nav" aria-label="Primary navigation">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                {item.label}
-              </NavLink>
-            ))}
+            {navItems.map((item) => {
+              const active = isItemActive(item);
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={active ? "active" : ""}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {item.label}
+                </NavLink>
+              );
+            })}
           </nav>
           <div className="nav-actions">
             <motion.button
@@ -110,7 +148,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 >
                   {initials(user.name)}
                 </NavLink>
-                <button className="nav-text desktop-only" onClick={logout}>
+                <button
+                  className="nav-text nav-text--secondary desktop-only"
+                  onClick={logout}
+                >
                   Log out
                 </button>
               </>
@@ -147,11 +188,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
             exit={{ opacity: 0, y: -16, filter: "blur(4px)" }}
             transition={{ type: "spring", damping: 24, stiffness: 280 }}
           >
-            {navItems.map((item) => (
-              <NavLink key={item.to} to={item.to}>
-                {item.label}
-              </NavLink>
-            ))}
+            {navItems.map((item) => {
+              const active = isItemActive(item);
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={active ? "active" : ""}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {item.label}
+                </NavLink>
+              );
+            })}
             {user ? (
               <>
                 <NavLink to="/bookings">My bookings</NavLink>
