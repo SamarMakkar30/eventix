@@ -51,8 +51,17 @@ export async function request<T>(
       const body = (await response.json()) as {
         message?: string;
         error?: string;
+        fields?: Record<string, string>;
+        errors?: Array<{ field?: string; defaultMessage?: string }>;
       };
-      message = body.message || body.error || message;
+      if (body.fields && typeof body.fields === "object" && Object.keys(body.fields).length) {
+        message = Object.values(body.fields).join(", ");
+      } else if (Array.isArray(body.errors) && body.errors.length) {
+        const errMsgs = body.errors.map((e) => e.defaultMessage).filter(Boolean).join(", ");
+        message = errMsgs || body.error || message;
+      } else {
+        message = body.message || body.error || message;
+      }
     } catch {
       // Some gateway responses have no JSON body.
     }

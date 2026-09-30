@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
@@ -17,7 +17,7 @@ import { clearBookingDraft, getBookingDraft } from "../lib/booking-draft";
 import { dateTime, money } from "../lib/utils";
 
 export function CheckoutPage() {
-  const draft = getBookingDraft();
+  const [draft] = useState(() => getBookingDraft());
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const toast = useToast();
