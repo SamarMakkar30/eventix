@@ -54,6 +54,13 @@ const NotFoundPage = lazy(() =>
     default: module.NotFoundPage,
   })),
 );
+const DesignSystemGallery = import.meta.env.DEV
+  ? lazy(() =>
+      import("./pages/design-system").then((module) => ({
+        default: module.DesignSystemGallery,
+      })),
+    )
+  : null;
 
 function PageFallback() {
   return (
@@ -83,6 +90,14 @@ function AdminOnly({ children }: { children: React.ReactNode }) {
 }
 function AppRoutes() {
   const location = useLocation();
+  if (import.meta.env.DEV && DesignSystemGallery && location.pathname === "/_design") {
+    return (
+      <Suspense fallback={<div className="ds-gallery__loading">Loading design system…</div>}>
+        <DesignSystemGallery />
+      </Suspense>
+    );
+  }
+
   return (
     <AppErrorBoundary>
       <Layout>
