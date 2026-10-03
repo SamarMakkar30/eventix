@@ -37,3 +37,7 @@ __pycache__/
 *.pyc
 
 infrastructure/terraform/final.auto.tfvars
+
+frontend/test-results/
+frontend/playwright-report/
+locust-eventix_*.csv

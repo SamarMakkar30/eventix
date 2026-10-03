@@ -16,8 +16,10 @@ export class AppErrorBoundary extends Component<
     return { hasError: true };
   }
 
-  componentDidCatch(_error: Error, _info: ErrorInfo) {
+  componentDidCatch(error: Error, info: ErrorInfo) {
     // Keep errors private; this boundary gives users a recovery path without exposing internals.
+    void error;
+    void info;
   }
 
   render() {

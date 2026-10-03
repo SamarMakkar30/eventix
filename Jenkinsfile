@@ -62,6 +62,7 @@ pipeline {
                             dir('frontend') {
                                 sh 'npm ci'
                                 sh 'npm run lint'
+                                sh 'npm run test'
                                 sh 'npm run build'
                             }
                         }

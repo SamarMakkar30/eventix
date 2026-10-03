@@ -75,4 +75,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  deleteShow: (id: number) =>
+    request<void>(`/api/catalog/shows/${id}`, { method: "DELETE" }),
+  /** Admin: fetch all users' bookings */
+  allBookings: () => request<Booking[]>("/api/bookings/admin/all"),
 };

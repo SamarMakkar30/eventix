@@ -89,6 +89,7 @@ const labels: Record<BookingStatus, string> = {
   PENDING: "Pending",
   CONFIRMED: "Confirmed",
   PAYMENT_FAILED: "Payment failed",
+  FAILED: "Failed",
   CANCELLED: "Cancelled",
 };
 export function StatusBadge({ status }: { status: BookingStatus }) {

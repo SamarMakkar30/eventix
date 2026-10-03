@@ -1,241 +1,374 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { Menu, Moon, Sun, Ticket, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { useQueryClient } from "@tanstack/react-query";
+import { Ticket, Sun, Moon, LogOut, User, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/auth-context";
+import { useToast } from "../context/toast-context";
 import { initials } from "../lib/utils";
-import type { Show } from "../types/api";
 
-const navItems = [
-  { to: "/shows", label: "Explore" },
-  { to: "/shows?type=MOVIE", label: "Movies" },
-  { to: "/shows?type=EVENT", label: "Events" },
-];
+function useTheme() {
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const stored = localStorage.getItem("eventix_theme");
+    if (stored === "dark" || stored === "light") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
 
-export function Brand() {
-  return (
-    <Link className="brand" to="/" aria-label="Eventix home">
-      <motion.span
-        className="brand-mark"
-        whileHover={{ rotate: 12, scale: 1.08 }}
-        transition={{ type: "spring", stiffness: 400, damping: 15 }}
-      >
-        <Ticket size={17} />
-      </motion.span>
-      <span>EVENTIX</span>
-    </Link>
-  );
-}
-
-export function Layout({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">(
-    () => (localStorage.getItem("eventix_theme") as "dark" | "light") || "dark",
-  );
-  const { user, isAdmin, logout } = useAuth();
-  const location = useLocation();
-  const isAuthPage =
-    location.pathname === "/login" || location.pathname === "/register";
   useEffect(() => {
-    setOpen(false);
-  }, [location.pathname, location.search]);
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("eventix_theme", theme);
   }, [theme]);
+
+  const toggle = () => setTheme((t) => (t === "light" ? "dark" : "light"));
+  return { theme, toggle };
+}
+
+function useScrolled(threshold = 8) {
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const updateScrollState = () => setScrolled(window.scrollY > 12);
-    updateScrollState();
-    window.addEventListener("scroll", updateScrollState, { passive: true });
-    return () => window.removeEventListener("scroll", updateScrollState);
+    const handler = () => setScrolled(window.scrollY > threshold);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, [threshold]);
+  return scrolled;
+}
+
+export function Layout() {
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { show } = useToast();
+  const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
+  const scrolled = useScrolled();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
-  const toggleTheme = () =>
-    setTheme((value) => (value === "dark" ? "light" : "dark"));
 
-  const queryClient = useQueryClient();
-  const isItemActive = (item: { to: string; label: string }) => {
-    const currentPath = location.pathname;
-    const search = location.search;
+  // Close mobile menu on resize
+  useEffect(() => {
+    const handler = () => { if (window.innerWidth >= 768) setMenuOpen(false); };
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
-    if (item.label === "Explore") {
-      return currentPath === "/shows" && (!search || search === "?type=ALL");
-    }
+  // Lock body scroll when mobile menu open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
 
-    if (item.label === "Movies") {
-      if (currentPath === "/shows" && search.includes("type=MOVIE")) return true;
-      if (currentPath.startsWith("/shows/")) {
-        const showId = currentPath.split("/")[2];
-        const showData = showId ? queryClient.getQueryData<Show>(["show", showId]) : null;
-        return showData ? showData.showType === "MOVIE" : true;
-      }
-      return false;
-    }
-
-    if (item.label === "Events") {
-      if (currentPath === "/shows" && search.includes("type=EVENT")) return true;
-      if (currentPath.startsWith("/shows/")) {
-        const showId = currentPath.split("/")[2];
-        const showData = showId ? queryClient.getQueryData<Show>(["show", showId]) : null;
-        return showData?.showType === "EVENT";
-      }
-      return false;
-    }
-
-    return false;
+  const handleLogout = () => {
+    logout();
+    show("success", "Signed out", "See you again soon!");
+    navigate("/");
+    setMenuOpen(false);
+    setDropdownOpen(false);
   };
 
-  if (isAuthPage) return <>{children}</>;
+  const navItems = [
+    { to: "/", label: "Home", end: true },
+    { to: "/shows", label: "Browse" },
+  ];
 
   return (
-    <div className="app-shell">
-      <header
-        className={`site-header ${scrolled ? "site-header--scrolled" : ""}`}
-      >
-        <div className="nav-wrap">
-          <Brand />
-          <nav className="desktop-nav" aria-label="Primary navigation">
-            {navItems.map((item) => {
-              const active = isItemActive(item);
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={active ? "active" : ""}
-                  aria-current={active ? "page" : undefined}
-                >
-                  {item.label}
-                </NavLink>
-              );
-            })}
-          </nav>
+    <>
+      {/* ── SITE HEADER ── */}
+      <header className={`site-header${scrolled ? " site-header--scrolled" : ""}`}>
+        <nav className="nav-inner" aria-label="Main navigation">
+          {/* Brand */}
+          <Link to="/" className="brand" aria-label="Eventix home">
+            <span className="brand-mark" aria-hidden="true">EX</span>
+            Eventix
+          </Link>
+
+          {/* Desktop nav links */}
+          <div className="nav-links" role="list">
+            {navItems.map(({ to, label, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                role="listitem"
+                className={({ isActive }) => isActive ? "active" : ""}
+              >
+                {label}
+              </NavLink>
+            ))}
+          </div>
+
+          {/* Desktop actions */}
           <div className="nav-actions">
-            <motion.button
-              className="icon-button"
-              onClick={toggleTheme}
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-              whileTap={{ scale: 0.88, rotate: 180 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            {/* Theme toggle */}
+            <button
+              className="theme-toggle btn--icon"
+              onClick={toggle}
+              aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+              title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
             >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={theme}
-                  initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                  exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-                  transition={{ duration: 0.2 }}
-                  style={{ display: "grid", placeItems: "center" }}
-                >
-                  {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-                </motion.span>
-              </AnimatePresence>
-            </motion.button>
-            {user ? (
-              <>
-                <NavLink className="nav-text desktop-only" to="/bookings">
-                  My bookings
-                </NavLink>
-                {isAdmin && (
-                  <NavLink className="nav-text desktop-only" to="/admin">
-                    Admin
-                  </NavLink>
-                )}
-                <NavLink
-                  className="avatar-link desktop-only"
-                  to="/profile"
-                  aria-label="Profile"
+              {theme === "light" ? <Moon size={17} /> : <Sun size={17} />}
+            </button>
+
+            {isAuthenticated && user ? (
+              <div style={{ position: "relative" }} ref={dropdownRef}>
+                <button
+                  className="nav-avatar"
+                  onClick={() => setDropdownOpen((o) => !o)}
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="true"
+                  aria-label={`Account menu for ${user.name}`}
+                  title={user.name}
                 >
                   {initials(user.name)}
-                </NavLink>
+                </button>
+                <AnimatePresence>
+                  {dropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                      transition={{ duration: 0.15 }}
+                      style={{
+                        position: "absolute", top: "calc(100% + 0.5rem)", right: 0,
+                        background: "var(--ev-surface)", border: "1px solid var(--ev-border)",
+                        borderRadius: "var(--ev-radius-card)", boxShadow: "var(--ev-shadow-elevated)",
+                        minWidth: 200, zIndex: 60, overflow: "hidden",
+                      }}
+                      role="menu"
+                    >
+                      <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--ev-border)" }}>
+                        <div style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--ev-text)" }}>{user.name}</div>
+                        <div style={{ fontSize: "0.8125rem", color: "var(--ev-text-muted)", marginTop: "0.125rem" }}>{user.email}</div>
+                      </div>
+                      <div style={{ padding: "0.375rem" }}>
+                        <DropdownItem icon={<User size={15} />} label="Profile" to="/profile" onClick={() => setDropdownOpen(false)} />
+                        <DropdownItem icon={<Ticket size={15} />} label="My Bookings" to="/bookings" onClick={() => setDropdownOpen(false)} />
+                        {isAdmin && <DropdownItem icon={<ShieldCheck size={15} />} label="Admin Panel" to="/admin" onClick={() => setDropdownOpen(false)} />}
+                        <div style={{ height: 1, background: "var(--ev-border)", margin: "0.375rem 0" }} />
+                        <button
+                          role="menuitem"
+                          onClick={handleLogout}
+                          style={{
+                            display: "flex", alignItems: "center", gap: "0.625rem",
+                            width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                            background: "none", borderRadius: "var(--ev-radius-control)",
+                            fontSize: "0.9375rem", cursor: "pointer",
+                            color: "var(--ev-danger)", transition: "background 0.15s",
+                          }}
+                          onMouseOver={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "color-mix(in srgb, var(--ev-danger) 8%, transparent)"; }}
+                          onFocus={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "color-mix(in srgb, var(--ev-danger) 8%, transparent)"; }}
+                          onMouseOut={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+                          onBlur={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+                        >
+                          <LogOut size={15} /> Sign out
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <>
+                <Link to="/login" className="btn btn--ghost btn--sm">Sign in</Link>
+                <Link to="/register" className="btn btn--primary btn--sm">Get started</Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="nav-hamburger"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+          >
+            <span style={menuOpen ? { transform: "translateY(6.5px) rotate(45deg)" } : {}} />
+            <span style={menuOpen ? { opacity: 0, transform: "scaleX(0)" } : {}} />
+            <span style={menuOpen ? { transform: "translateY(-6.5px) rotate(-45deg)" } : {}} />
+          </button>
+        </nav>
+      </header>
+
+      {/* ── MOBILE MENU ── */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            className="mobile-menu"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 400, damping: 40 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+          >
+            {navItems.map(({ to, label, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) => isActive ? "active" : ""}
+                onClick={() => setMenuOpen(false)}
+              >
+                {label}
+              </NavLink>
+            ))}
+            <div className="mobile-menu-divider" />
+            {isAuthenticated ? (
+              <>
+                <NavLink to="/profile" className={({ isActive }) => isActive ? "active" : ""} onClick={() => setMenuOpen(false)}>Profile</NavLink>
+                <NavLink to="/bookings" className={({ isActive }) => isActive ? "active" : ""} onClick={() => setMenuOpen(false)}>My Bookings</NavLink>
+                {isAdmin && <NavLink to="/admin" className={({ isActive }) => isActive ? "active" : ""} onClick={() => setMenuOpen(false)}>Admin</NavLink>}
+                <div className="mobile-menu-divider" />
                 <button
-                  className="nav-text nav-text--secondary desktop-only"
-                  onClick={logout}
+                  onClick={handleLogout}
+                  style={{ display: "flex", alignItems: "center", gap: "0.625rem", padding: "1rem 1.25rem", fontSize: "1.0625rem", fontWeight: 500, color: "var(--ev-danger)", background: "none", border: "none", borderRadius: "var(--ev-radius-card)", cursor: "pointer", width: "100%" }}
                 >
-                  Log out
+                  <LogOut size={18} /> Sign out
                 </button>
               </>
             ) : (
               <>
-                <NavLink className="nav-text desktop-only" to="/login">
-                  Log in
-                </NavLink>
-                <NavLink
-                  className="button button--small desktop-only"
-                  to="/register"
-                >
-                  Join Eventix
-                </NavLink>
+                <NavLink to="/login" className={({ isActive }) => isActive ? "active" : ""} onClick={() => setMenuOpen(false)}>Sign in</NavLink>
+                <NavLink to="/register" className={({ isActive }) => isActive ? "active" : ""} onClick={() => setMenuOpen(false)}>Get started</NavLink>
               </>
             )}
+            <div className="mobile-menu-divider" />
             <button
-              className="icon-button mobile-toggle"
-              aria-expanded={open}
-              aria-label="Open navigation"
-              onClick={() => setOpen((value) => !value)}
+              onClick={() => { toggle(); }}
+              style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "1rem 1.25rem", fontSize: "1.0625rem", fontWeight: 500, color: "var(--ev-text-muted)", background: "none", border: "none", borderRadius: "var(--ev-radius-card)", cursor: "pointer" }}
             >
-              {open ? <X /> : <Menu />}
+              {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+              {theme === "light" ? "Dark mode" : "Light mode"}
             </button>
-          </div>
-        </div>
-      </header>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="mobile-menu"
-            initial={{ opacity: 0, y: -16, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -16, filter: "blur(4px)" }}
-            transition={{ type: "spring", damping: 24, stiffness: 280 }}
-          >
-            {navItems.map((item) => {
-              const active = isItemActive(item);
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={active ? "active" : ""}
-                  aria-current={active ? "page" : undefined}
-                >
-                  {item.label}
-                </NavLink>
-              );
-            })}
-            {user ? (
-              <>
-                <NavLink to="/bookings">My bookings</NavLink>
-                <NavLink to="/profile">Profile</NavLink>
-                {isAdmin && <NavLink to="/admin">Admin studio</NavLink>}
-                <button onClick={logout}>Log out</button>
-              </>
-            ) : (
-              <>
-                <NavLink to="/login">Log in</NavLink>
-                <NavLink to="/register">Create your account</NavLink>
-              </>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
-      <main>{children}</main>
-      <motion.footer
-        className="site-footer"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-40px" }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        <div>
-          <Brand />
-          <p>Moments worth leaving home for.</p>
+
+      {/* ── MAIN CONTENT ── */}
+      <main id="main-content">
+        <Outlet />
+      </main>
+
+      {/* ── FOOTER ── */}
+      <footer className="site-footer" aria-label="Site footer">
+        <div className="footer-inner">
+          <div className="footer-brand">
+            <Link to="/" className="footer-brand-name">Eventix</Link>
+            <p className="footer-brand-desc">The premium way to discover and book events and movies.</p>
+          </div>
+          <div className="footer-col">
+            <h5>Discover</h5>
+            <Link to="/shows">All Shows</Link>
+            <Link to="/shows?type=MOVIE">Movies</Link>
+            <Link to="/shows?type=EVENT">Events</Link>
+          </div>
+          <div className="footer-col">
+            <h5>Account</h5>
+            {isAuthenticated ? (
+              <>
+                <Link to="/bookings">My Bookings</Link>
+                <Link to="/profile">Profile</Link>
+              </>
+            ) : (
+              <>
+                <Link to="/login">Sign In</Link>
+                <Link to="/register">Register</Link>
+              </>
+            )}
+          </div>
+          <div className="footer-col">
+            <h5>Company</h5>
+            <Link to="/shows">About</Link>
+            <Link to="/shows">Contact</Link>
+            <Link to="/shows">Privacy</Link>
+            <Link to="/shows">Terms</Link>
+          </div>
         </div>
-        <div className="footer-links">
-          <Link to="/shows">Explore shows</Link>
-          <Link to="/bookings">My bookings</Link>
-          <Link to="/profile">Account</Link>
+        <div className="footer-inner">
+          <div className="footer-bottom" style={{ gridColumn: "1 / -1" }}>
+            <p className="footer-legal">© {new Date().getFullYear()} Eventix. All rights reserved.</p>
+            <p className="footer-legal">Payments are simulated — no real transactions occur.</p>
+          </div>
         </div>
-        <p className="copyright">© {new Date().getFullYear()} Eventix</p>
-      </motion.footer>
+      </footer>
+    </>
+  );
+}
+
+// Dropdown menu item
+function DropdownItem({ icon, label, to, onClick }: { icon: React.ReactNode; label: string; to: string; onClick: () => void }) {
+  return (
+    <Link
+      to={to}
+      role="menuitem"
+      onClick={onClick}
+      style={{
+        display: "flex", alignItems: "center", gap: "0.625rem",
+        padding: "0.5rem 0.75rem", borderRadius: "var(--ev-radius-control)",
+        fontSize: "0.9375rem", color: "var(--ev-text)", textDecoration: "none",
+        transition: "background 0.15s",
+      }}
+      onMouseOver={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--ev-pink-wash)"; }}
+      onMouseOut={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
+    >
+      <span style={{ color: "var(--ev-text-subtle)" }}>{icon}</span>
+      {label}
+    </Link>
+  );
+}
+
+// Protected route guard
+export function Protected({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isReady } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isReady && !isAuthenticated) {
+      navigate(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`, { replace: true });
+    }
+  }, [isAuthenticated, isReady, navigate]);
+
+  if (!isReady) return <RouteLoadingFallback />;
+  if (!isAuthenticated) return null;
+  return <>{children}</>;
+}
+
+// Admin-only route guard
+export function AdminOnly({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isAdmin, isReady } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isReady) return;
+    if (!isAuthenticated) navigate(`/login?next=/admin`, { replace: true });
+    else if (!isAdmin) navigate("/", { replace: true });
+  }, [isAuthenticated, isAdmin, isReady, navigate]);
+
+  if (!isReady) return <RouteLoadingFallback />;
+  if (!isAuthenticated || !isAdmin) return null;
+  return <>{children}</>;
+}
+
+// Route loading skeleton
+export function RouteLoadingFallback() {
+  return (
+    <div className="page container" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div className="skeleton" style={{ height: "2rem", width: "40%", borderRadius: "var(--ev-radius-control)" }} />
+      <div className="skeleton" style={{ height: "1rem", width: "70%", borderRadius: "var(--ev-radius-control)" }} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "1.25rem", marginTop: "1rem" }}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="skeleton skeleton--card" style={{ aspectRatio: "2/3" }} />
+        ))}
+      </div>
     </div>
   );
 }

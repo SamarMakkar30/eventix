@@ -7,20 +7,31 @@ import { DsInput } from "@/components/ui/input";
 import { DsSkeleton } from "@/components/ui/skeleton";
 
 const colors = [
-  ["Ink", "var(--ds-ink)"], ["Surface", "var(--ds-surface)"], ["Raised", "var(--ds-surface-raised)"],
-  ["Accent", "var(--ds-accent)"], ["Success", "var(--ds-success)"], ["Warning", "var(--ds-warning)"], ["Danger", "var(--ds-danger)"],
+  ["Cream (bg)", "var(--ev-bg)"],
+  ["Surface", "var(--ev-surface)"],
+  ["Raised", "var(--ev-bg-raised)"],
+  ["Burgundy", "var(--ev-accent)"],
+  ["Burgundy hover", "var(--ev-accent-hover)"],
+  ["Dusty Pink", "var(--ev-pink)"],
+  ["Pink wash", "var(--ev-pink-wash)"],
+  ["Text", "var(--ev-text)"],
+  ["Text muted", "var(--ev-text-muted)"],
+  ["Border", "var(--ev-border)"],
+  ["Success", "var(--ev-success)"],
+  ["Warning", "var(--ev-warning)"],
+  ["Danger", "var(--ev-danger)"],
 ] as const;
 
 export function DesignSystemGallery() {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   return (
     <main className="design-system" data-theme={theme}>
       <div className="ds-gallery__shell">
         <header className="ds-gallery__header">
           <div>
-            <p className="ds-gallery__eyebrow">Eventix · Phase 1</p>
+            <p className="ds-gallery__eyebrow">Eventix · Design Tokens</p>
             <h1>Design system</h1>
-            <p className="ds-gallery__intro">The neutral foundation, single crimson action color, and accessible primitives for the Eventix rebuild.</p>
+            <p className="ds-gallery__intro">Burgundy accent, cream foundation, dusty-pink soft tints. 60/30/10 — all pairs WCAG AA or better.</p>
           </div>
           <DsButton className="ds-gallery__theme" variant="secondary" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
             {theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
@@ -30,7 +41,7 @@ export function DesignSystemGallery() {
 
         <div className="ds-gallery__grid">
           <section className="ds-section ds-section--full" aria-labelledby="color-title">
-            <div className="ds-section__head"><p className="ds-section__eyebrow">01 · Color</p><h2 id="color-title">Quiet surfaces, one decisive action color</h2><p className="ds-section__description">Crimson is reserved for primary actions, selection, and focus. Status colors describe state only.</p></div>
+            <div className="ds-section__head"><p className="ds-section__eyebrow">01 · Color</p><h2 id="color-title">Burgundy #722F37 · Cream #F8F4E7 · Dusty Pink #D7A7B1</h2><p className="ds-section__description">Burgundy is the sole accent — CTAs, selected states, focus rings. Pink appears only as soft tints. No other brand colors.</p></div>
             <div className="ds-token-grid">{colors.map(([label, value]) => <div className="ds-color-token" key={label}><div className="ds-color-token__swatch" style={{ "--token": value } as React.CSSProperties} /><span className="ds-color-token__label">{label}</span></div>)}</div>
           </section>
 

@@ -5,8 +5,9 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./context/auth-context";
 import { ToastProvider } from "./context/toast-context";
+import "@fontsource-variable/geist";
 import "./styles/design-system.css";
-import "./styles.css";
+import "./styles/global.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {

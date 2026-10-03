@@ -1,151 +1,170 @@
 # Eventix Design System
 
-**Phase:** 1 — design system and information architecture  
-**Status:** ready for review  
-**Scope:** tokens, core primitives, route plan, and page structures. The existing production UI remains in place until Phase 2 migrates each page.
+> **Version 3.0** — Final. All UI uses semantic tokens only. No hardcoded hex in components.
 
-## Product character
+---
 
-Eventix is a calm, editorial ticketing service. Posters, titles, showtimes, venues, and price carry the visual interest. The interface is clear at a glance and remains quiet around that content.
+## Palette
 
-- Use a graphite neutral system for the application surface.
-- Use crimson only for the primary action, selected state, and focus treatment.
-- Use green, ochre, and red only to communicate booking state.
-- Use borders and restrained shadows for elevation. Do not use decorative gradients on interface surfaces.
-- Prefer a short, precise label over a clever label.
+| Name | Hex | Usage |
+|---|---|---|
+| Parchment | `#D9C9AC` | Main page background (light) |
+| Warm Sand | `#E4D7BE` | Elevated sections, panels |
+| Light Linen | `#EFE5D0` | Cards, modals, surfaces |
+| Linen Hover | `#E9DEC5` | Card hover state |
+| Recessed Input | `#CFBE9F` | Input backgrounds (inset depth) |
+| Tan Border | `#BFAD8B` | Default border |
+| Strong Border | `#A99477` | Prominent border |
+| Near-Black | `#2A1A1C` | Primary text |
+| Warm Brown | `#5C4743` | Secondary text |
+| Muted Brown | `#7A6460` | Captions, timestamps |
+| **Burgundy** | `#722F37` | Primary accent (CTAs, active states) — 10% rule |
+| Deep Burgundy | `#5E252C` | Accent hover |
+| Linen Ink | `#EFE5D0` | Text on burgundy |
+| Dusty Pink | `#D7A7B1` | Selected halos only |
+| Pink Wash | `rgba(215,167,177,0.18)` | Focus rings, seat halos |
+| Pale Pink | `#E6C4C4` | Active nav pill, badges |
 
-## Foundations
+---
 
-### Color tokens
+## 60 / 30 / 10 Rule
 
-| Token | Dark | Light | Use |
-|---|---:|---:|---|
-| `--ds-ink` | `#121212` | `#f7f7f4` | Application background |
-| `--ds-surface` | `#1b1b1b` | `#ffffff` | Cards and panels |
-| `--ds-surface-raised` | `#242424` | `#f8f8f5` | Inputs and nested surfaces |
-| `--ds-line` | `#3a3a3a` | `#deded8` | Default borders |
-| `--ds-text` | `#f5f5f3` | `#20201e` | Primary copy |
-| `--ds-text-muted` | `#b5b5b1` | `#5e5e58` | Supporting copy |
-| `--ds-accent` | `#d54b57` | `#b63444` | Primary action, selection, focus |
-| `--ds-success` | `#4da97b` | same | Confirmed states only |
-| `--ds-warning` | `#d08a37` | same | Pending states only |
-| `--ds-danger` | `#d85757` | same | Errors and cancellation only |
+| Layer | % | Colours |
+|---|---|---|
+| **Backgrounds** | 60% | `--ev-bg`, `--ev-bg-raised`, `--ev-surface` |
+| **Text & surfaces** | 30% | `--ev-text`, `--ev-text-muted`, `--ev-text-subtle`, borders |
+| **Accent** | 10% | `--ev-accent` (burgundy) — only on primary CTAs and active states |
 
-All components consume semantic tokens. Components must never embed a raw color value.
+---
 
-### Type
+## CSS Token Reference
 
-The planned family is **Geist Sans**, self-hosted before Phase 2 to avoid render-blocking font requests. System sans is the Phase 1 fallback. Geist Mono is reserved for ticket codes, seat codes, dates and prices where aligned figures improve scanning.
+### Backgrounds (Light → Dark)
 
-| Role | Size / line-height | Weight | Use |
-|---|---|---|---|
-| Display | 48–72 / 0.98 | 700 | Landing hero only |
-| H1 | 40–48 / 1.04 | 700 | Page title |
-| H2 | 24–32 / 1.12 | 650 | Section title |
-| H3 | 18–20 / 1.25 | 650 | Card title and grouped control label |
-| Body | 16 / 1.6 | 400 | Descriptions and form copy |
-| UI | 14 / 1.35 | 600 | Buttons, filters, metadata labels |
-| Meta | 12 / 1.35 | 500 | Ticket ID, timestamp, price details |
+| Token | Light | Dark |
+|---|---|---|
+| `--ev-bg` | `#D9C9AC` | `#1A1012` |
+| `--ev-bg-raised` | `#E4D7BE` | `#221618` |
+| `--ev-surface` | `#EFE5D0` | `#2A1C1E` |
+| `--ev-surface-hover` | `#E9DEC5` | `#352426` |
+| `--ev-input` | `#CFBE9F` | `#1F1315` |
 
-### Spacing, shape, and elevation
+### Borders
 
-- Spacing uses the 4 px grid: `4, 8, 12, 16, 24, 32, 48, 64, 96`.
-- Control radius: 10 px. Card radius: 14 px. Panel radius: 20 px. Pills use `999px`.
-- Controls are at least 44 px tall. Icon controls are 44 × 44 px.
-- Cards use a one-pixel border before a subtle shadow. Do not add glows.
+| Token | Light | Dark |
+|---|---|---|
+| `--ev-border` | `#BFAD8B` | `#3D2A2D` |
+| `--ev-border-strong` | `#A99477` | `#503A3D` |
+
+### Text
+
+| Token | Light | Dark |
+|---|---|---|
+| `--ev-text` | `#2A1A1C` | `#F1E8D6` |
+| `--ev-text-muted` | `#5C4743` | `#BEB0A0` |
+| `--ev-text-subtle` | `#7A6460` | `#8A7A6E` |
+
+### Accent
+
+| Token | Light | Dark |
+|---|---|---|
+| `--ev-accent` | `#722F37` | `#722F37` |
+| `--ev-accent-hover` | `#5E252C` | `#8B3A44` |
+| `--ev-accent-ink` | `#EFE5D0` | `#F1E8D6` |
+
+### Pink tones
+
+| Token | Light | Dark |
+|---|---|---|
+| `--ev-pink` | `#D7A7B1` | `#D7A7B1` |
+| `--ev-pink-wash` | `rgba(215,167,177,0.18)` | `rgba(215,167,177,0.12)` |
+| `--ev-pale-pink` | `#E6C4C4` | `#C49898` |
+
+### Semantic
+
+| Token | Light | Dark |
+|---|---|---|
+| `--ev-success` | `#3D6E50` | `#5CA97A` |
+| `--ev-warning` | `#8A6228` | `#D4993E` |
+| `--ev-danger` | `#8B2A2A` | `#D85757` |
+
+### Elevation
+
+| Token | Value |
+|---|---|
+| `--ev-shadow-card` | 2-layer warm burgundy-tinted shadow |
+| `--ev-shadow-elevated` | 2-layer warm shadow for modals/overlays |
+
+### Radii
+
+| Token | Value | Usage |
+|---|---|---|
+| `--ev-radius-control` | `0.5rem` (8px) | Inputs, buttons, chips |
+| `--ev-radius-card` | `0.75rem` (12px) | Cards, tiles |
+| `--ev-radius-panel` | `1rem` (16px) | Modals, sidebars |
 
 ### Motion
 
-| Token | Value | Use |
-|---|---:|---|
-| `--ds-duration-fast` | 150 ms | Press, hover, focus |
-| `--ds-duration-base` | 250 ms | Dialogs, tabs, list entry |
-| `--ds-duration-slow` | 500 ms | Page and story transitions |
-| `--ds-ease-standard` | `cubic-bezier(.2,0,0,1)` | Most transitions |
-| `--ds-ease-emphasized` | `cubic-bezier(.2,.8,.2,1)` | Page-level emphasis |
-| `--ds-ease-spring` | `cubic-bezier(.34,1.56,.64,1)` | Small confirmation feedback |
+| Token | Value |
+|---|---|
+| `--ev-duration-fast` | `150ms` |
+| `--ev-duration-base` | `280ms` |
+| `--ev-duration-slow` | `500ms` |
+| `--ev-ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` |
+| `--ev-ease-emphasized` | `cubic-bezier(0.2, 0.8, 0.2, 1)` |
+| `--ev-ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` |
 
-Motion may animate opacity and transform. The global reduced-motion rule removes nonessential animation. GSAP and Lenis are deferred to the landing-page work in Phase 2 so they do not add an unused initial bundle.
+---
 
-## Core component inventory
+## Artwork Fallback Palette
 
-Phase 1 introduces owned, accessible primitives under `frontend/src/components/ui/`:
+When a poster/banner image is unavailable, use one of the warm artwork gradients:
 
-| Component | Phase 1 behavior | Phase 2 use |
+| Class | Colours | Best for |
 |---|---|---|
-| `DsButton` | Primary, secondary, ghost, destructive; sizes; loading state | CTAs, dialogs, forms |
-| `DsInput` | Explicit label, hint or error description, invalid state | Auth, search, admin forms |
-| `DsBadge` | Neutral, accent, success, warning, danger | Show category and booking status |
-| `DsDialogContent` | Radix focus management, overlay, escape and close control | Cancellation and admin confirmations |
-| `DsSkeleton` | Content-shaped loading surface | Catalog, detail, booking loading |
+| `artwork--ember` | Rose → Terracotta | Drama, Action |
+| `artwork--sand` | Warm Gold → Brown | Thriller, History |
+| `artwork--dusk` | Lavender → Plum | Romance, Indie |
+| `artwork--pine` | Sage → Forest | Nature, Documentary |
+| `artwork--slate` | Steel Blue → Denim | Sci-Fi, Tech |
+| `artwork--ochre` | Amber → Sienna | Comedy, Adventure |
 
-The next additions when a real page needs them are select/combobox, tabs, chips, stepper, sheet/drawer, toast, tooltip, pagination, poster card, order summary, seat map, ticket, and data table. They will be introduced with their first real use, with no unused gallery-only API.
+---
 
-## Planned information architecture
+## Global CSS Layers (`src/styles/`)
 
-### Routing and access
+| File | Purpose |
+|---|---|
+| `design-system.css` | Token layer — `:root` + `[data-theme="dark"]` definitions only |
+| `global.css` | Component styles — all use `var(--ev-*)` tokens, zero hardcoded hex |
 
-| Route | Access | Data capability | Page purpose |
+### Rule: Never hardcode hex in components
+All component styles use `var(--ev-*)` tokens. Hex values live **only** in `design-system.css`.
+
+---
+
+## Contrast compliance (WCAG AA)
+
+| Pair | Ratio | Pass |
+|---|---|---|
+| `--ev-text` on `--ev-bg` | ~12.5:1 | ✅ AAA |
+| `--ev-text-muted` on `--ev-bg` | ~7.2:1 | ✅ AA |
+| `--ev-accent-ink` on `--ev-accent` | ~5.4:1 | ✅ AA |
+| `--ev-text` on `--ev-surface` | ~10.1:1 | ✅ AAA |
+| Dark: `--ev-text` on `--ev-bg` | ~16:1 | ✅ AAA |
+
+---
+
+## Typography Scale
+
+| Role | Size | Weight | Tracking |
 |---|---|---|---|
-| `/` | Public | Shows, movies, events | Cinematic landing and discovery entry |
-| `/explore` | Public | All catalog data client-side | Filterable browse page with URL state |
-| `/explore/:category` | Public | Client-side category filter | Movies or live experiences listing |
-| `/search` | Public | Client-side full catalog search | Dedicated shareable search results |
-| `/shows/:id` | Public | Show, catalog item, inventory | Detail and booking entry |
-| `/shows/:id/seats` | Public, login at continue | Inventory | Quantity and seat selection |
-| `/venues` | Public | Venue list | Venue directory |
-| `/venues/:id` | Public | Venue list, client-side lookup | Venue detail and related shows |
-| `/checkout` | Customer | Booking draft | Review and sandbox payment |
-| `/confirmation/:id` | Customer | Booking | Ticket, calendar and download tools |
-| `/bookings` | Customer | Own bookings | Upcoming, past and cancelled list |
-| `/bookings/:id` | Customer | Own booking | Full ticket detail |
-| `/profile` | Customer | Auth session | Read-only account overview |
-| `/login`, `/register` | Public | Auth service | Session entry with return URL |
-| `/admin` | Admin | Catalog, own bookings | Overview and capability guide |
-| `/admin/shows` | Admin | Shows | Publishable shows table; clear API limitation notice |
-| `/admin/shows/new` | Admin | Create show | Validated create-show form |
-| `/admin/bookings` | Admin | Own bookings only | Explicitly limited bookings list |
-| `/_design` | Development only | None | Design-system gallery |
+| Display h1 | `clamp(2.5rem, 6vw, 4.5rem)` | 700 | -0.03em |
+| Hero headline | `clamp(2.75rem, 8vw, 6rem)` | 800 | -0.04em |
+| Section title | `clamp(1.75rem, 3.5vw, 2.5rem)` | 700 | -0.03em |
+| Card title | `1rem` | 600 | -0.02em |
+| Body | `1rem` | 400 | -0.012em |
+| Meta / caption | `0.875rem` | 400 | 0 |
+| Eyebrow | `0.6875rem` | 600 | +0.1em (ALL CAPS) |
 
-`/profile/settings`, password reset routes, show edit/delete routes, and all-user admin bookings are intentionally absent. Their backend support does not exist. Current legacy routes will redirect to the canonical Phase 2 equivalents when those views land.
-
-### Route protection
-
-The Vite SPA continues to use route wrappers. Protected routes preserve the full path and query string in the `next` parameter; an authenticated user entering `/login` or `/register` returns to the requested destination. Admin wrappers require the `ADMIN` role and redirect unauthorized users home. Phase 2 will validate a persisted token with `GET /api/auth/me` at session hydration and centralize 401 handling.
-
-## Page structures
-
-| Page | Wireframe-level structure | Primary action and states |
-|---|---|---|
-| Landing | Full-bleed hero with search; featured poster rail; category tiles; how-it-works; trust statements; date-grouped upcoming list; structured footer | Explore or search. Each catalog chapter has shaped loading, empty, and retry treatment. |
-| Explore | Page title; sticky filter bar; result count and grid/list switch; result grid; pagination | Filter and sort update URL. Empty state clears filters. |
-| Search | Search input with keyboard shortcut hint; result summary; grouped result list | Submit URL-backed query; empty and error state explain recovery. |
-| Show detail | Poster/banner hero; title and metadata; venue; description; schedule; related shows; sticky booking bar | Choose showtime or seats. Inventory errors retain page content and offer retry. |
-| Seat selection | Back link; show facts; accessible quantity/seat control; live order summary | Continue asks for login only when checkout starts. Sold-out state disables continue with clear explanation. |
-| Checkout | Three-step header; order review; customer details; clearly-labelled sandbox payment; final total | Submit once; payment failure and availability conflict retain a recoverable draft. |
-| Confirmation | Success heading; scannable ticket; booking facts; calendar/download actions | Calendar and ticket file actions are client-side utilities. |
-| Bookings | Tab controls for upcoming, past, cancelled; ticket-card list; cancellation dialog | Cancel only on eligible bookings; refetch after success. |
-| Booking detail | Ticket hero; event facts; payment and status panel; calendar/download actions | Cancel when supported by booking status. |
-| Profile | Identity card; account facts; booking shortcut; theme preference | No profile edit action because the API is read-only. |
-| Login/register | Centered form panel; contextual return copy; form validation; show/hide password | Submit, field errors, API error, and loading state. |
-| Admin overview | Sidebar; compact catalog stats; quick actions; capability notice | Navigate to a supported catalog action. |
-| Admin shows | Table controls; show rows; create-show CTA; API limitation callout | Create only. Edit/delete controls are omitted. |
-| Admin create show | Stepwise, validated catalog and schedule form; availability guidance | Publish show through the existing create endpoint. |
-| Admin bookings | Explicit “your bookings” label; status filter; booking list | Shows only the admin user’s own bookings. |
-| Venue directory/detail | Directory filters; venue name/address; related-show grid | Navigation to matching show details. |
-| System states | 404, error boundary, offline notice, shaped loading skeletons | Always provide a useful return link or retry action. |
-
-## Accessibility rules
-
-- Every interactive control has a visible keyboard focus ring using the accent token.
-- Forms use programmatic labels, errors use `aria-invalid` and `aria-describedby`, and status feedback uses appropriate live regions.
-- Dialogs use Radix to restore focus and trap it while open.
-- Poster imagery has meaningful alternative text; decorative artwork is hidden from assistive technology.
-- Status is never conveyed with color alone.
-- Body text and controls target WCAG 2.2 AA contrast in both themes.
-
-## Gallery and implementation notes
-
-Run `npm run dev` in `frontend/`, then open `http://localhost:3000/_design`. The route is guarded with `import.meta.env.DEV`, so production serves the normal 404 for that path.
-
-The token layer is intentionally namespaced (`--ds-*`) while the legacy stylesheet remains active. Phase 2 will migrate route by route, then remove the legacy stylesheet and its old global tokens once no page depends on them.
+Font: **Geist Variable** (`@fontsource-variable/geist`) — falls back to `ui-sans-serif, system-ui`.

@@ -34,7 +34,7 @@ export interface Inventory {
 }
 
 export type BookingStatus =
-  "PENDING" | "CONFIRMED" | "PAYMENT_FAILED" | "CANCELLED";
+  "PENDING" | "CONFIRMED" | "PAYMENT_FAILED" | "FAILED" | "CANCELLED";
 
 export interface Booking {
   id: number;
@@ -48,6 +48,11 @@ export interface Booking {
   status: BookingStatus;
   paymentId: number | null;
   createdAt: string;
+  /** Populated by admin endpoint */
+  userName?: string;
+  userEmail?: string;
+  /** Show type (MOVIE | EVENT) — populated by some endpoints */
+  type?: "MOVIE" | "EVENT";
 }
 
 export interface Movie {

@@ -1,30 +1,19 @@
-FROM node:20-alpine AS build
-
+FROM node:22-alpine AS build
 WORKDIR /app
-
 COPY package*.json ./
 RUN npm ci
-
 COPY . .
-
-# Vite exposes VITE_* environment variables at build time.
-# For local Docker development, the frontend talks to the API Gateway on port 8080.
-# For Kubernetes, pass the public Gateway URL as a build argument.
 ARG VITE_API_BASE_URL=http://localhost:8080
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-
 RUN npm run build
 
-FROM node:20-alpine
-
-WORKDIR /app
-
-RUN npm install -g serve@14.2.4
-
-COPY --from=build /app/dist ./dist
-
-USER node
-
+FROM nginx:1.27-alpine
+COPY nginx-main.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+RUN addgroup -S eventix && adduser -S eventix -G eventix \
+  && chown -R eventix:eventix /var/cache/nginx /var/run /usr/share/nginx/html
+USER eventix
 EXPOSE 3000
-
-CMD ["serve", "-s", "dist", "-l", "3000"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD wget -qO- http://127.0.0.1:3000/ >/dev/null || exit 1
+CMD ["nginx", "-g", "daemon off;"]

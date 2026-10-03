@@ -1,263 +1,239 @@
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowRight,
-  CalendarDays,
-  Clock3,
-  Info,
-  MapPin,
-  Ticket,
-  Users,
-} from "lucide-react";
-import { Link, useParams } from "react-router-dom";
 import { motion } from "motion/react";
+import {
+  CalendarDays, MapPin, Clock, Users, Star, Film, Zap,
+  ArrowRight, Ticket, ChevronLeft,
+} from "lucide-react";
 import { api } from "../api/eventix";
-import { Artwork } from "../components/artwork";
-import { Button, ErrorState, Skeleton } from "../components/ui";
-import { dateTime, money } from "../lib/utils";
+import { money, dateTime, dateOnly } from "../lib/utils";
+import { useAuth } from "../context/auth-context";
 
-const factVariants = {
-  hidden: { opacity: 0, x: -16 },
-  visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.4, delay: 0.45 + i * 0.08, ease: "easeOut" as const },
-  }),
-};
-
-const infoCardVariants = {
-  hidden: { opacity: 0, y: 28 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: i * 0.1, ease: "easeOut" as const },
-  }),
-};
+const FALLBACKS = ["ember", "sand", "dusk", "pine", "slate", "ochre"] as const;
 
 export function ShowDetailPage() {
-  const { id = "" } = useParams();
-  const show = useQuery({ queryKey: ["show", id], queryFn: () => api.show(id) });
-  const inventory = useQuery({
-    queryKey: ["inventory", id],
-    queryFn: () => api.inventory(id),
-    retry: false,
-    enabled: Boolean(show.data),
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const { data: show, isLoading: showLoading, error: showError } = useQuery({
+    queryKey: ["show", id],
+    queryFn: () => api.show(id!),
+    enabled: !!id,
   });
-  const movies = useQuery({ queryKey: ["movies"], queryFn: api.movies });
-  const events = useQuery({ queryKey: ["events"], queryFn: api.events });
 
-  if (show.isLoading)
+  const { data: inventory, isLoading: invLoading } = useQuery({
+    queryKey: ["inventory", id],
+    queryFn: () => api.inventory(id!),
+    enabled: !!id,
+    refetchInterval: 30_000,
+  });
+
+  const { data: movies = [] } = useQuery({ queryKey: ["movies"], queryFn: api.movies });
+  const { data: events = [] } = useQuery({ queryKey: ["events"], queryFn: api.events });
+
+  if (showLoading) return <DetailSkeleton />;
+
+  if (showError || !show) {
     return (
-      <div className="page container detail-loading">
-        <Skeleton className="detail-loading-art" />
-        <div>
-          <Skeleton className="detail-loading-title" />
-          <Skeleton className="detail-loading-copy" />
-          <Skeleton className="detail-loading-copy" />
-        </div>
+      <div className="error-state page container">
+        <Ticket className="error-state__icon" />
+        <div className="error-state__title">Show not found</div>
+        <p className="error-state__desc">This show may have been removed or doesn't exist.</p>
+        <Link to="/shows" className="btn btn--primary">Browse shows</Link>
       </div>
     );
+  }
 
-  if (show.isError || !show.data)
-    return (
-      <div className="page container">
-        <ErrorState
-          title="This experience has moved on"
-          detail="The show you're looking for is unavailable or no longer listed."
-        />
-      </div>
-    );
+  const movie   = show.showType === "MOVIE" ? movies.find((m) => m.id === show.movieId) : null;
+  const event   = show.showType === "EVENT" ? events.find((e) => e.id === show.eventId) : null;
+  const bannerUrl = movie?.posterUrl ?? event?.bannerUrl ?? null;
+  const fb = FALLBACKS[show.id % FALLBACKS.length]!;
+  const available = inventory?.availableSeats;
+  const isPast = new Date(show.showDateTime) < new Date();
+  const isSoldOut = available !== undefined && available === 0;
 
-  const data = show.data;
-  const movie = movies.data?.find((item) => item.id === data.movieId);
-  const event = events.data?.find((item) => item.id === data.eventId);
-  const description = data.showType === "MOVIE" ? movie?.description : event?.description;
-  const category = data.showType === "MOVIE" ? movie?.genre : event?.category;
-  const imageUrl = data.showType === "MOVIE" ? movie?.posterUrl : event?.bannerUrl;
-  const available = inventory.data?.availableSeats;
-  const soldOut = available === 0;
-  const availabilityUnavailable = inventory.isError;
-
-  const facts = [
-    { icon: <CalendarDays />, label: dateTime(data.showDateTime) },
-    { icon: <MapPin />, label: data.venueName },
-    { icon: <Ticket />, label: `${money(data.price)} per ticket` },
-    ...(available !== undefined
-      ? [
-          {
-            icon: <Ticket />,
-            label: soldOut ? "Sold out" : `${available} tickets left`,
-            cls: soldOut ? "sold-out" : undefined,
-          },
-        ]
-      : []),
-    ...(availabilityUnavailable
-      ? [{ icon: <Info />, label: "Availability not configured", cls: "availability-unknown" }]
-      : []),
-  ];
-
-  const infoCards = [
-    {
-      icon: <Clock3 />,
-      title: "Arrive with ease",
-      body: "We recommend arriving 20 minutes before the scheduled start.",
-    },
-    {
-      icon: <Ticket />,
-      title: "Tickets in one place",
-      body: "Your confirmation and booking reference live securely in My Bookings.",
-    },
-    {
-      icon: <MapPin />,
-      title: data.venueName,
-      body: "Your venue and timing are confirmed as part of your booking.",
-    },
-  ];
+  const handleBook = () => {
+    if (!isAuthenticated) {
+      navigate(`/login?next=/shows/${show.id}/seats`);
+    } else {
+      navigate(`/shows/${show.id}/seats`);
+    }
+  };
 
   return (
     <>
-      <section className="detail-hero">
-        <div className="detail-hero__ambient" />
-        <div className="container detail-hero__grid">
-          <motion.div
-            className="detail-poster"
-            initial={{ opacity: 0, scale: 0.94, rotate: -1 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <Artwork
-              title={data.title}
-              seed={data.id}
-              imageUrl={imageUrl}
-              type={data.showType}
-            />
-          </motion.div>
+      {/* Hero */}
+      <div className="show-hero">
+        {bannerUrl
+          ? <img src={bannerUrl} alt={show.title} />
+          : <div className={`artwork--${fb}`} style={{ width: "100%", height: "100%" }} />}
+        <div className="show-hero__overlay" />
+        <motion.div
+          className="show-hero__content"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="show-hero__eyebrow">
+            {show.showType === "MOVIE" ? "Movie" : (event?.category ?? "Event")}
+            {movie?.language && ` · ${movie.language}`}
+          </div>
+          <h1 className="show-hero__title">{show.title}</h1>
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.9375rem", opacity: 0.85 }}>
+              <CalendarDays size={15} /> {dateOnly(show.showDateTime)}
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.9375rem", opacity: 0.85 }}>
+              <MapPin size={15} /> {show.venueName}
+            </span>
+          </div>
+        </motion.div>
+      </div>
 
-          <div className="detail-content">
-            <motion.nav
-              aria-label="Breadcrumb"
-              className="breadcrumb"
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.45 }}
-            >
-              <Link to="/shows">Explore</Link>
-              <span aria-hidden="true">/</span>
-              <Link
-                to={
-                  data.showType === "MOVIE"
-                    ? "/shows?type=MOVIE"
-                    : "/shows?type=EVENT"
-                }
-              >
-                {data.showType === "MOVIE" ? "Film" : "Live event"}
-              </Link>
-            </motion.nav>
+      <div className="container">
+        {/* Back */}
+        <div style={{ padding: "1.25rem 0 0" }}>
+          <Link to="/shows" className="btn btn--ghost btn--sm" style={{ paddingLeft: "0.25rem", gap: "0.25rem" }}>
+            <ChevronLeft size={16} /> All shows
+          </Link>
+        </div>
 
-            <motion.p
-              className="eyebrow"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.15 }}
-            >
-              {category || (data.showType === "MOVIE" ? "On the big screen" : "Live experience")}
-            </motion.p>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.2 }}
-            >
-              {data.title}
-            </motion.h1>
-
-            <motion.p
-              className="detail-description"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              {description || "An experience carefully selected for an unforgettable night out."}
-            </motion.p>
-
-            <div className="detail-facts">
-              {facts.map((fact, i) => (
-                <motion.span
-                  key={i}
-                  className={fact.cls}
-                  variants={factVariants}
-                  initial="hidden"
-                  animate="visible"
-                  custom={i}
-                >
-                  {fact.icon}
-                  {fact.label}
-                </motion.span>
-              ))}
+        <div className="show-layout">
+          {/* Left — details */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+            {/* Meta grid */}
+            <div className="card" style={{ padding: "1.5rem" }}>
+              <div className="show-meta-grid">
+                <MetaItem label="Date" value={dateOnly(show.showDateTime)} icon={<CalendarDays size={14} />} />
+                <MetaItem label="Time" value={new Date(show.showDateTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} icon={<Clock size={14} />} />
+                <MetaItem label="Venue" value={show.venueName} icon={<MapPin size={14} />} />
+                <MetaItem label="Total seats" value={show.totalSeats.toString()} icon={<Users size={14} />} />
+                {movie?.durationMinutes && <MetaItem label="Duration" value={`${movie.durationMinutes} min`} icon={<Clock size={14} />} />}
+                {movie?.genre && <MetaItem label="Genre" value={movie.genre} icon={<Film size={14} />} />}
+                {movie?.rating != null && (
+                  <MetaItem label="Rating" value={`${movie.rating.toFixed(1)} / 10`} icon={<Star size={14} />} />
+                )}
+                {event?.category && <MetaItem label="Category" value={event.category} icon={<Zap size={14} />} />}
+              </div>
             </div>
 
-            {availabilityUnavailable && (
-              <motion.p
-                className="availability-callout"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-              >
-                This experience is listed, but ticket inventory has not been
-                configured by Eventix yet. Please choose another available show.
-              </motion.p>
+            {/* Description */}
+            {(movie?.description ?? event?.description) && (
+              <div className="card" style={{ padding: "1.5rem" }}>
+                <h2 style={{ fontSize: "1.125rem", fontWeight: 700, marginBottom: "0.875rem" }}>About</h2>
+                <p style={{ color: "var(--ev-text-muted)", lineHeight: 1.75, fontSize: "0.9375rem" }}>
+                  {movie?.description ?? event?.description}
+                </p>
+              </div>
             )}
 
-            <motion.div
-              className="detail-actions"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.65, duration: 0.45 }}
-            >
-              {soldOut || availabilityUnavailable ? (
-                <Button disabled>
-                  {soldOut ? "Sold out" : "Booking unavailable"}
-                </Button>
-              ) : (
-                <Link className="button" to={`/shows/${data.id}/seats`}>
-                  Choose tickets <ArrowRight size={17} />
-                </Link>
+            {/* Availability bar */}
+            {!invLoading && inventory && (
+              <div className="card" style={{ padding: "1.25rem 1.5rem", display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.8125rem", color: "var(--ev-text-subtle)", marginBottom: "0.375rem" }}>Availability</div>
+                  <div style={{ height: "6px", background: "var(--ev-bg-raised)", borderRadius: "999px", overflow: "hidden" }}>
+                    <div
+                      style={{
+                        height: "100%",
+                        width: `${(inventory.availableSeats / inventory.totalSeats) * 100}%`,
+                        background: inventory.availableSeats < 10 ? "var(--ev-danger)" : "var(--ev-success)",
+                        borderRadius: "999px",
+                        transition: "width 0.4s",
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <span style={{ fontSize: "1rem", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                    {inventory.availableSeats}
+                  </span>
+                  <span style={{ fontSize: "0.875rem", color: "var(--ev-text-muted)" }}> / {inventory.totalSeats} seats left</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right — sticky booking card */}
+          <div>
+            <div className="show-sticky">
+              <div>
+                <div style={{ fontSize: "0.75rem", color: "var(--ev-text-subtle)", marginBottom: "0.25rem" }}>Price per ticket</div>
+                <div style={{ fontSize: "2.25rem", fontWeight: 800, letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>
+                  {money(show.price)}
+                </div>
+              </div>
+
+              {!invLoading && (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  {isSoldOut || isPast ? (
+                    <span className="status-badge status-badge--cancelled">
+                      {isPast ? "Show ended" : "Sold out"}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="status-badge status-badge--confirmed">Available</span>
+                      {available !== undefined && available < 20 && (
+                        <span className="badge badge--danger" style={{ fontSize: "0.75rem" }}>Only {available} left!</span>
+                      )}
+                    </>
+                  )}
+                </div>
               )}
-              <a className="button button--ghost" href="#event-info">
-                <Info size={17} />
-                Show information
-              </a>
-            </motion.div>
+
+              <button
+                className="btn btn--primary btn--lg"
+                onClick={handleBook}
+                disabled={isSoldOut || isPast}
+                style={{ width: "100%" }}
+              >
+                {isPast ? "Show ended" : isSoldOut ? "Sold out" : <>Book tickets <ArrowRight size={18} /></>}
+              </button>
+
+              {!isAuthenticated && !isPast && !isSoldOut && (
+                <p style={{ fontSize: "0.8125rem", color: "var(--ev-text-subtle)", textAlign: "center" }}>
+                  You'll be asked to sign in to complete booking.
+                </p>
+              )}
+
+              <div style={{ fontSize: "0.8125rem", color: "var(--ev-text-subtle)", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                <span>📅 {dateTime(show.showDateTime)}</span>
+                <span>📍 {show.venueName}</span>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
-
-      <section id="event-info" className="section container detail-info">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.6 }}
-        >
-          <p className="eyebrow">Before you go</p>
-          <h2>A beautifully uncomplicated night.</h2>
-        </motion.div>
-        <div className="info-grid">
-          {infoCards.map((card, i) => (
-            <motion.div
-              key={i}
-              variants={infoCardVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-40px" }}
-              custom={i}
-            >
-              {card.icon}
-              <h3>{card.title}</h3>
-              <p>{card.body}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      </div>
     </>
+  );
+}
+
+function MetaItem({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+  return (
+    <div className="show-meta-item">
+      <span className="show-meta-item__label">{label}</span>
+      <span className="show-meta-item__value" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+        {icon && <span style={{ color: "var(--ev-text-subtle)" }}>{icon}</span>}{value}
+      </span>
+    </div>
+  );
+}
+
+function DetailSkeleton() {
+  return (
+    <div>
+      <div className="skeleton" style={{ height: "clamp(280px, 45vw, 520px)", width: "100%", borderRadius: 0 }} />
+      <div className="container">
+        <div style={{ padding: "2.5rem 0 4rem", display: "grid", gridTemplateColumns: "1fr 320px", gap: "2.5rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div className="skeleton" style={{ height: "2rem", width: "60%" }} />
+            <div className="skeleton" style={{ height: "1rem", width: "80%" }} />
+            <div className="skeleton" style={{ height: "1rem", width: "45%" }} />
+          </div>
+          <div className="skeleton skeleton--card" style={{ height: "280px" }} />
+        </div>
+      </div>
+    </div>
   );
 }

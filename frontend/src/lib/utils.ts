@@ -30,6 +30,6 @@ export const initials = (name: string) =>
     .toUpperCase();
 
 export const posterGradient = (seed: number) => {
-  const gradients = ["ember", "violet", "ocean", "sunset", "mint", "copper"];
+  const gradients = ["ember", "sand", "dusk", "pine", "slate", "ochre"];
   return gradients[seed % gradients.length];
 };

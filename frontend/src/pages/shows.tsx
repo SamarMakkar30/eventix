@@ -1,262 +1,257 @@
-import { useMemo, useState } from "react";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { CalendarDays, Filter, Search, SlidersHorizontal } from "lucide-react";
+import { useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "motion/react";
+import { Search, SlidersHorizontal, Star, Film, Zap, X } from "lucide-react";
 import { api } from "../api/eventix";
-import { ShowCard } from "../components/show-card";
-import { EmptyState, ErrorState, Select, Skeleton } from "../components/ui";
-import { useSearchParams } from "react-router-dom";
+import { money, dateOnly } from "../lib/utils";
+import type { Show, Movie, Event } from "../types/api";
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 24, scale: 0.97 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.45, delay: i * 0.06, ease: "easeOut" as const },
-  }),
-};
+const FALLBACKS = ["ember", "sand", "dusk", "pine", "slate", "ochre"] as const;
+const SORT_OPTIONS = [
+  { value: "date-asc",   label: "Date: soonest first" },
+  { value: "date-desc",  label: "Date: latest first" },
+  { value: "price-asc",  label: "Price: low to high" },
+  { value: "price-desc", label: "Price: high to low" },
+  { value: "title",      label: "Title A–Z" },
+];
+
+function ShowCard({ show, movies, events }: { show: Show; movies: Movie[]; events: Event[] }) {
+  const url =
+    show.showType === "MOVIE"
+      ? movies.find((m) => m.id === show.movieId)?.posterUrl
+      : events.find((e) => e.id === show.eventId)?.bannerUrl;
+  const rating =
+    show.showType === "MOVIE" ? movies.find((m) => m.id === show.movieId)?.rating : null;
+  const ev = show.showType === "EVENT" ? events.find((e) => e.id === show.eventId) : null;
+  const fb = FALLBACKS[show.id % FALLBACKS.length]!;
+
+  return (
+    <Link to={`/shows/${show.id}`} className="poster-card">
+      <div className="poster-card__art">
+        {url
+          ? <img src={url} alt={show.title} loading="lazy" />
+          : <div className={`poster-card__fallback artwork--${fb}`} style={{ height: "100%" }} />}
+        <div className="poster-card__badge">
+          <span className={`badge ${show.showType === "MOVIE" ? "badge--accent" : "badge--pink"}`}>
+            {show.showType === "MOVIE" ? "Movie" : (ev?.category ?? "Event")}
+          </span>
+        </div>
+      </div>
+      <div className="poster-card__body">
+        <div className="poster-card__title">{show.title}</div>
+        <div className="poster-card__meta">{dateOnly(show.showDateTime)}</div>
+        <div className="poster-card__meta">{show.venueName}</div>
+        {rating != null && (
+          <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "0.8125rem", color: "var(--ev-text-muted)", marginTop: "0.25rem" }}>
+            <Star size={12} fill="currentColor" /> {rating.toFixed(1)}
+          </div>
+        )}
+        <div className="poster-card__footer">
+          <span className="poster-card__price">{money(show.price)}</span>
+          <span className="poster-card__link">Book →</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function ShowCardSkeleton() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", borderRadius: "var(--ev-radius-card)", overflow: "hidden" }}>
+      <div className="skeleton skeleton--card" style={{ aspectRatio: "2/3" }} />
+      <div style={{ padding: "1rem", background: "var(--ev-surface)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div className="skeleton skeleton--text" style={{ width: "80%" }} />
+        <div className="skeleton skeleton--text" style={{ width: "55%" }} />
+        <div className="skeleton skeleton--text" style={{ width: "40%", marginTop: "0.5rem" }} />
+      </div>
+    </div>
+  );
+}
 
 export function ShowsPage() {
   const [params, setParams] = useSearchParams();
-  const [query, setQuery] = useState("");
-  const [type, setType] = useState(params.get("type") || "ALL");
-  const [venue, setVenue] = useState("ALL");
-  const [date, setDate] = useState("ALL");
-  const [price, setPrice] = useState("ALL");
-  const [sort, setSort] = useState("soonest");
-  const shows = useQuery({ queryKey: ["shows"], queryFn: api.shows });
-  const movies = useQuery({ queryKey: ["movies"], queryFn: api.movies });
-  const events = useQuery({ queryKey: ["events"], queryFn: api.events });
 
-  const moviesMap = useMemo(
-    () => new Map(movies.data?.map((m) => [m.id, m])),
-    [movies.data],
-  );
-  const eventsMap = useMemo(
-    () => new Map(events.data?.map((e) => [e.id, e])),
-    [events.data],
-  );
-  const inventoryQueries = useQueries({
-    queries: (shows.data || []).map((show) => ({
-      queryKey: ["inventory", String(show.id)],
-      queryFn: () => api.inventory(show.id),
-      retry: false,
-    })),
-  });
-  const availability = useMemo(
-    () =>
-      new Map(
-        (shows.data || []).map((show, index) => [
-          show.id,
-          inventoryQueries[index]?.data?.availableSeats,
-        ]),
-      ),
-    [shows.data, inventoryQueries],
-  );
-  const venueOptions = useMemo(
-    () =>
-      Array.from(
-        new Set((shows.data || []).map((show) => show.venueName)),
-      ).sort(),
-    [shows.data],
-  );
-  const dates = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          (shows.data || []).map((show) => show.showDateTime.slice(0, 10)),
-        ),
-      ).sort(),
-    [shows.data],
-  );
-  const filtered = useMemo(
-    () =>
-      (shows.data || [])
-        .filter((show) => {
-          const textMatches = `${show.title} ${show.venueName}`
-            .toLowerCase()
-            .includes(query.toLowerCase());
-          const priceMatches =
-            price === "ALL" ||
-            (price === "UNDER_250" ? show.price < 250 : show.price >= 250);
-          return (
-            (type === "ALL" || show.showType === type) &&
-            (venue === "ALL" || show.venueName === venue) &&
-            (date === "ALL" || show.showDateTime.slice(0, 10) === date) &&
-            priceMatches &&
-            textMatches
-          );
-        })
-        .sort((a, b) =>
-          sort === "price"
-            ? a.price - b.price
-            : sort === "availability"
-              ? (availability.get(b.id) || 0) - (availability.get(a.id) || 0)
-              : new Date(a.showDateTime).getTime() -
-                new Date(b.showDateTime).getTime(),
-        ),
-    [shows.data, type, venue, date, price, query, sort, availability],
-  );
-  const changeType = (value: string) => {
-    setType(value);
-    setParams(value === "ALL" ? {} : { type: value });
-  };
+  const typeFilter = params.get("type") ?? "ALL";
+  const searchQuery = params.get("q") ?? "";
+  const sortBy = params.get("sort") ?? "date-asc";
+
+  function setParam(key: string, val: string) {
+    const next = new URLSearchParams(params);
+    if (val) next.set(key, val); else next.delete(key);
+    setParams(next, { replace: true });
+  }
+
+  const { data: shows = [], isLoading: showsLoading } = useQuery({ queryKey: ["shows"], queryFn: api.shows });
+  const { data: movies = [] } = useQuery({ queryKey: ["movies"], queryFn: api.movies });
+  const { data: events = [] } = useQuery({ queryKey: ["events"], queryFn: api.events });
+
+  const filtered = useMemo(() => {
+    let result = [...shows];
+
+    if (typeFilter !== "ALL") result = result.filter((s) => s.showType === typeFilter);
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (s) => s.title.toLowerCase().includes(q) || s.venueName.toLowerCase().includes(q)
+      );
+    }
+
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "date-asc":   return new Date(a.showDateTime).getTime() - new Date(b.showDateTime).getTime();
+        case "date-desc":  return new Date(b.showDateTime).getTime() - new Date(a.showDateTime).getTime();
+        case "price-asc":  return a.price - b.price;
+        case "price-desc": return b.price - a.price;
+        case "title":      return a.title.localeCompare(b.title);
+        default:           return 0;
+      }
+    });
+
+    return result;
+  }, [shows, typeFilter, searchQuery, sortBy]);
+
+  const hasFilters = typeFilter !== "ALL" || searchQuery;
 
   return (
-    <div className="page container">
-      <motion.div
-        className="page-intro"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        <p className="eyebrow">Discover</p>
-        <h1>Find a reason to go out.</h1>
-        <p>
-          Fresh screenings, live moments, and all the details that make a good
-          plan easy.
-        </p>
-      </motion.div>
-
-      <motion.div
-        className="filters filters--expanded"
-        aria-label="Show filters"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        <label className="search-field">
-          <Search size={18} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search shows or venues"
-            aria-label="Search shows or venues"
-          />
-        </label>
-        <Select
-          label="Type"
-          value={type}
-          onChange={(event) => changeType(event.target.value)}
-        >
-          <option value="ALL">All experiences</option>
-          <option value="MOVIE">Movies</option>
-          <option value="EVENT">Live events</option>
-        </Select>
-        <Select
-          label="Venue"
-          value={venue}
-          onChange={(event) => setVenue(event.target.value)}
-        >
-          <option value="ALL">All venues</option>
-          {venueOptions.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </Select>
-        <Select
-          label="Date"
-          value={date}
-          onChange={(event) => setDate(event.target.value)}
-        >
-          <option value="ALL">Any date</option>
-          {dates.map((item) => (
-            <option key={item} value={item}>
-              {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(
-                new Date(`${item}T12:00:00`),
-              )}
-            </option>
-          ))}
-        </Select>
-        <Select
-          label="Price"
-          value={price}
-          onChange={(event) => setPrice(event.target.value)}
-        >
-          <option value="ALL">Any price</option>
-          <option value="UNDER_250">Under ₹250</option>
-          <option value="250_PLUS">₹250 and above</option>
-        </Select>
-        <Select
-          label="Sort"
-          value={sort}
-          onChange={(event) => setSort(event.target.value)}
-        >
-          <option value="soonest">Soonest first</option>
-          <option value="price">Lowest price</option>
-          <option value="availability">Most available</option>
-        </Select>
-        <span className="filter-mark">
-          <SlidersHorizontal size={17} /> Refine your plans
-        </span>
-      </motion.div>
-
-      {shows.isError ? (
-        <ErrorState
-          detail="The programme is unavailable right now."
-          retry={() => shows.refetch()}
-        />
-      ) : shows.isLoading ? (
-        <div className="shows-grid">
-          {Array.from({ length: 6 }, (_, i) => (
-            <div className="show-card skeleton-card" key={i}>
-              <Skeleton />
-              <Skeleton />
-              <Skeleton />
-            </div>
-          ))}
+    <div className="page">
+      <div className="container">
+        {/* Page header */}
+        <div style={{ marginBottom: "2rem" }}>
+          <p className="eyebrow" style={{ marginBottom: "0.5rem" }}>All shows</p>
+          <h1 style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "0.25rem" }}>
+            Browse &amp; discover
+          </h1>
+          {!showsLoading && (
+            <p className="text-muted" style={{ fontSize: "0.9375rem" }}>
+              {filtered.length} show{filtered.length !== 1 ? "s" : ""} found
+            </p>
+          )}
         </div>
-      ) : filtered.length ? (
-        <>
-          <h2 className="sr-only">Available experiences</h2>
-          <motion.div
-            className="results-count"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <span className="results-count__main">
-              <Filter size={15} />
-              {filtered.length}{" "}
-              {filtered.length === 1 ? "experience" : "experiences"} to explore
-            </span>
-            <span className="results-count__availability">
-              <CalendarDays size={14} />
-              Live availability shown where configured
-            </span>
-          </motion.div>
-          <AnimatePresence mode="popLayout">
-            <motion.div className="shows-grid" layout>
-              {filtered.map((show, index) => (
+
+        {/* Filter bar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
+          {/* Type chips */}
+          <div className="filter-bar" role="group" aria-label="Filter by type">
+            {(["ALL", "MOVIE", "EVENT"] as const).map((t) => (
+              <button
+                key={t}
+                className={`filter-chip${typeFilter === t ? " filter-chip--active" : ""}`}
+                onClick={() => setParam("type", t === "ALL" ? "" : t)}
+                aria-pressed={typeFilter === t}
+              >
+                {t === "ALL" && <SlidersHorizontal size={14} />}
+                {t === "MOVIE" && <Film size={14} />}
+                {t === "EVENT" && <Zap size={14} />}
+                {t === "ALL" ? "All shows" : t === "MOVIE" ? "Movies" : "Events"}
+              </button>
+            ))}
+          </div>
+
+          {/* Search + sort row */}
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+            <div className="search-wrap" style={{ flex: "1 1 220px", maxWidth: "380px" }}>
+              <Search className="search-icon" size={16} />
+              <input
+                id="shows-search"
+                type="search"
+                className="input"
+                placeholder="Search shows or venues…"
+                value={searchQuery}
+                onChange={(e) => setParam("q", e.target.value)}
+                aria-label="Search shows"
+              />
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "auto", flexWrap: "wrap" }}>
+              <label htmlFor="shows-sort" className="field-label" style={{ whiteSpace: "nowrap" }}>Sort by</label>
+              <select
+                id="shows-sort"
+                className="input"
+                value={sortBy}
+                onChange={(e) => setParam("sort", e.target.value)}
+                style={{ width: "auto", minWidth: "180px" }}
+              >
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Active filter pills */}
+          {hasFilters && (
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+              <span className="text-subtle" style={{ fontSize: "0.8125rem" }}>Active filters:</span>
+              {typeFilter !== "ALL" && (
+                <button
+                  className="badge badge--accent"
+                  style={{ cursor: "pointer", border: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                  onClick={() => setParam("type", "")}
+                  aria-label={`Remove ${typeFilter} filter`}
+                >
+                  {typeFilter} <X size={11} />
+                </button>
+              )}
+              {searchQuery && (
+                <button
+                  className="badge badge--neutral"
+                  style={{ cursor: "pointer", border: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                  onClick={() => setParam("q", "")}
+                  aria-label="Remove search filter"
+                >
+                  "{searchQuery}" <X size={11} />
+                </button>
+              )}
+              <button
+                className="btn btn--ghost btn--sm"
+                onClick={() => setParams({}, { replace: true })}
+                style={{ height: "auto", padding: "0.2rem 0.625rem", fontSize: "0.8125rem" }}
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Grid */}
+        {showsLoading ? (
+          <div className="grid--cards">
+            {Array.from({ length: 8 }).map((_, i) => <ShowCardSkeleton key={i} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <Search className="empty-state__icon" />
+            <div className="empty-state__title">No shows found</div>
+            <p className="empty-state__desc">
+              {hasFilters ? "Try adjusting your filters or search term." : "No shows are available yet."}
+            </p>
+            {hasFilters && (
+              <button className="btn btn--secondary" onClick={() => setParams({}, { replace: true })}>
+                Clear filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid--cards">
+            <AnimatePresence mode="popLayout">
+              {filtered.map((show, i) => (
                 <motion.div
                   key={show.id}
                   layout
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                  custom={index}
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.3) }}
                 >
-                  <ShowCard
-                    show={show}
-                    movie={show.movieId ? moviesMap.get(show.movieId) : undefined}
-                    event={show.eventId ? eventsMap.get(show.eventId) : undefined}
-                    availableSeats={availability.get(show.id)}
-                    index={0}
-                  />
+                  <ShowCard show={show} movies={movies} events={events} />
                 </motion.div>
               ))}
-            </motion.div>
-          </AnimatePresence>
-        </>
-      ) : (
-        <EmptyState
-          title="Nothing matches that search"
-          detail="Try a different title, venue, date, or price filter."
-        />
-      )}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
