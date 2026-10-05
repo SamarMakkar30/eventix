@@ -21,7 +21,11 @@ export function ShowDetailPage() {
     enabled: !!id,
   });
 
-  const { data: inventory, isLoading: invLoading } = useQuery({
+  const {
+    data: inventory,
+    isLoading: invLoading,
+    isError: inventoryError,
+  } = useQuery({
     queryKey: ["inventory", id],
     queryFn: () => api.inventory(id!),
     enabled: !!id,
@@ -67,11 +71,14 @@ export function ShowDetailPage() {
   const available = inventory?.availableSeats;
   const isPast = new Date(show.showDateTime) < new Date();
   const isSoldOut = available !== undefined && available === 0;
+  /* The inventory service has no record for this show — booking can't proceed */
+  const noInventory = !invLoading && inventoryError;
   const fillPct = inventory && inventory.totalSeats > 0
     ? Math.round(((inventory.totalSeats - inventory.availableSeats) / inventory.totalSeats) * 100)
     : 0;
 
   const handleBook = () => {
+    if (noInventory) return;
     if (!isAuthenticated) {
       navigate(`/login?next=/shows/${show.id}/seats`);
     } else {
@@ -200,7 +207,11 @@ export function ShowDetailPage() {
 
               {!invLoading && (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                  {isSoldOut || isPast ? (
+                  {noInventory ? (
+                    <span className="status-badge status-badge--pending">
+                      Availability unavailable
+                    </span>
+                  ) : isSoldOut || isPast ? (
                     <span className="status-badge status-badge--cancelled">
                       {isPast ? "This show has ended" : "Sold out"}
                     </span>
@@ -224,11 +235,23 @@ export function ShowDetailPage() {
               <button
                 className="btn btn--primary btn--lg btn-shine"
                 onClick={handleBook}
-                disabled={isSoldOut || isPast}
+                disabled={isSoldOut || isPast || noInventory}
                 style={{ width: "100%" }}
               >
-                {isPast ? "Show ended" : isSoldOut ? "Sold out" : <>Book tickets <ArrowRight size={18} aria-hidden="true" /></>}
+                {isPast
+                  ? "Show ended"
+                  : isSoldOut
+                    ? "Sold out"
+                    : noInventory
+                      ? "Booking unavailable"
+                      : <>Book tickets <ArrowRight size={18} aria-hidden="true" /></>}
               </button>
+
+              {noInventory && (
+                <p style={{ fontSize: "0.8125rem", color: "var(--ev-text-subtle)", textAlign: "center" }}>
+                  This show has no seat inventory registered yet.
+                </p>
+              )}
 
               {!isAuthenticated && !isPast && !isSoldOut && (
                 <p style={{ fontSize: "0.8125rem", color: "var(--ev-text-subtle)", textAlign: "center" }}>

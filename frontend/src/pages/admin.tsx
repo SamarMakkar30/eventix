@@ -340,9 +340,9 @@ export function AdminPage() {
       setDeleteTarget(null);
     },
     onError: (err) => {
-      /* Real backends without a DELETE route return 405 — say exactly that. */
+      /* Real backends without a DELETE route answer 403/405 — say exactly that. */
       const apiErr = err as ApiError;
-      const hint = apiErr?.status === 405
+      const hint = apiErr?.status === 405 || apiErr?.status === 403
         ? "The catalogue service doesn't expose show deletion yet — remove it at the database or add the endpoint."
         : (apiErr?.message ?? "Unable to delete this show.");
       toast("error", "Delete unavailable", hint);

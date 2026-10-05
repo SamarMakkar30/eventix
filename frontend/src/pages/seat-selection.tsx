@@ -29,7 +29,12 @@ export function SeatSelectionPage() {
     enabled: !!id,
   });
 
-  const { data: inventory, isLoading: invLoading } = useQuery({
+  const {
+    data: inventory,
+    isLoading: invLoading,
+    isError: inventoryError,
+    refetch: invRefetch,
+  } = useQuery({
     queryKey: ["inventory", id],
     queryFn: () => api.inventory(id!),
     enabled: !!id,
@@ -55,29 +60,54 @@ export function SeatSelectionPage() {
     );
   }
 
-  if (showError || (!show && !invLoading)) {
+  if (showError) {
     return (
       <div className="error-state page container">
-        {showError
-          ? <AlertTriangle className="error-state__icon" style={{ color: "var(--ev-warning)" }} />
-          : <Ticket className="error-state__icon" />}
-        <div className="error-state__title">{showError ? "Couldn't load this show" : "Show not found"}</div>
-        <p className="error-state__desc">
-          {showError ? "We couldn't reach the box office. Please try again." : "This show may have ended its run."}
-        </p>
+        <AlertTriangle className="error-state__icon" style={{ color: "var(--ev-warning)" }} />
+        <div className="error-state__title">Couldn't load this show</div>
+        <p className="error-state__desc">We couldn't reach the box office. Please try again.</p>
         <div style={{ display: "flex", gap: "0.75rem" }}>
-          {showError && (
-            <button className="btn btn--secondary" onClick={() => void refetch()}>
-              <RefreshCw size={16} /> Try again
-            </button>
-          )}
+          <button className="btn btn--secondary" onClick={() => void refetch()}>
+            <RefreshCw size={16} /> Try again
+          </button>
           <Link to="/shows" className="btn btn--primary">Browse shows</Link>
         </div>
       </div>
     );
   }
 
-  if (!show || available === undefined) return null;
+  /* The show exists but the inventory service has no record for it —
+     a real state the backend can produce. Never render a blank page. */
+  if (show && inventoryError) {
+    return (
+      <div className="error-state page container">
+        <AlertTriangle className="error-state__icon" style={{ color: "var(--ev-warning)" }} />
+        <div className="error-state__title">Availability unavailable</div>
+        <p className="error-state__desc">
+          &ldquo;{show.title}&rdquo; has no seat inventory registered yet, so it can't be booked right now.
+        </p>
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <button className="btn btn--secondary" onClick={() => void invRefetch()}>
+            <RefreshCw size={16} /> Try again
+          </button>
+          <Link to={`/shows/${show.id}`} className="btn btn--primary">Back to show</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!show) {
+    return (
+      <div className="error-state page container">
+        <Ticket className="error-state__icon" />
+        <div className="error-state__title">Show not found</div>
+        <p className="error-state__desc">This show may have ended its run.</p>
+        <Link to="/shows" className="btn btn--primary">Browse shows</Link>
+      </div>
+    );
+  }
+
+  if (available === undefined) return null;
 
   const isPast = new Date(show.showDateTime) < new Date();
   const isSoldOut = available === 0;

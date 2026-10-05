@@ -10,6 +10,7 @@ import {
 import { api } from "../api/eventix";
 import { money, dateTime } from "../lib/utils";
 import { downloadCalendar, downloadTicket } from "../lib/ticket-files";
+import type { ApiError } from "../api/client";
 import type { Booking, BookingStatus } from "../types/api";
 
 /* Audit fix: backend statuses are CONFIRMED | PENDING | PAYMENT_FAILED | CANCELLED.
@@ -77,12 +78,17 @@ export function ConfirmationPage() {
   }
 
   if (error || !booking) {
+    /* A 404 means the link is wrong; anything else (network, 5xx) is a
+       service problem — say so instead of blaming the link. */
+    const isNotFound = (error as ApiError | null)?.status === 404;
     return (
       <div className="error-state page container">
         <Ticket className="error-state__icon" />
-        <div className="error-state__title">Booking not found</div>
+        <div className="error-state__title">{isNotFound ? "Booking not found" : "Couldn't load this booking"}</div>
         <p className="error-state__desc">
-          We couldn't find this booking — it may belong to another account, or the link is off by a digit.
+          {isNotFound
+            ? "We couldn't find this booking — it may belong to another account, or the link is off by a digit."
+            : "The booking service isn't responding right now. Your booking is safe — try again in a moment."}
         </p>
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <button className="btn btn--secondary" onClick={() => void refetch()}>

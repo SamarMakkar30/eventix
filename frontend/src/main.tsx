@@ -20,6 +20,22 @@ const queryClient = new QueryClient({
   },
 });
 
+/* Prefetch every route chunk while the browser is idle — route switches
+   then render instantly instead of waiting on a first-visit fetch. */
+const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1200));
+idle(() => {
+  void import("./pages/shows");
+  void import("./pages/show-detail");
+  void import("./pages/seat-selection");
+  void import("./pages/checkout");
+  void import("./pages/confirmation");
+  void import("./pages/bookings");
+  void import("./pages/auth");
+  void import("./pages/profile");
+  void import("./pages/admin");
+  void import("./pages/not-found");
+});
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

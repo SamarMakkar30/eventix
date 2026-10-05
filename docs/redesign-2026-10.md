@@ -135,6 +135,23 @@ node ../scripts/mock-gateway.mjs   # seeds shows/movies/events/bookings, ports m
 
 Demo accounts (mock): `customer@eventix.test / password123` · `admin@eventix.test / admin12345`.
 
+## 6b. Real-backend validation (October 6, 2026)
+
+The full Docker stack (gateway + 7 services + Postgres) was brought up and every flow re-tested against **real services** instead of the mock:
+
+- ✅ Contract verified live: auth (login/register/me + JWT), catalog, inventory, booking create/fetch/cancel — response shapes match the frontend types exactly
+- ✅ Stale-session recovery: an invalid token is cleared gracefully via `/me` → 401 → logout
+- ✅ Full customer journey on real data: register → browse → book "Samar" → pay → confirmation EVX-000011 → cancel (real `CANCELLED` status, seats released)
+- ✅ Admin: real dashboard stats, delete-show 403 handled with the exact honest explanation
+- ✅ The two documented backend gaps confirmed live: `DELETE /api/catalog/shows/:id` → **403**, `/api/bookings/admin/all` → **403** (even with an ADMIN token)
+
+**Frontend fixes that came out of this pass** (committed after the walk-through):
+1. **Blank seat page killed**: a show without an inventory record (real case: show 1) rendered nothing — now an honest "Availability unavailable" state on detail (booking disabled) and a retry state on the seat page
+2. Confirmation error copy distinguishes "not found" (bad link) from "service down" (retry advice)
+3. Route chunks prefetch during idle time — first-visit route switches render instantly instead of lagging behind the old page under `v7_startTransition`
+
+**Infrastructure note:** during testing the booking-service JVM was hard-killed by Docker Desktop resource pressure (no OOM flag, no app error — host-level). The frontend showed its honest error state and recovered cleanly when the container restarted. Worth watching Docker Desktop's memory allocation if this recurs.
+
 ## 7. Recommended backend follow-ups (unchanged by this rebuild)
 
 1. `GET /api/bookings/admin/all` (admin-wide feed) and `DELETE /api/catalog/shows/:id`.
