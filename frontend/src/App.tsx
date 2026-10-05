@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { motion } from "motion/react";
 import { Layout, Protected, AdminOnly, RouteLoadingFallback } from "./components/layout";
 import { AppErrorBoundary } from "./components/error-boundary";
 
@@ -50,7 +50,6 @@ function PageShell({ children }: { children: React.ReactNode }) {
     <motion.div
       initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
       transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
@@ -59,14 +58,12 @@ function PageShell({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const location = useLocation();
-
   return (
     <AppErrorBoundary>
-      {/* AnimatePresence wraps the Routes (keyed by location) so page exit
-          animations play before the old tree unmounts. */}
-      <AnimatePresence mode="wait" initial={false}>
-        <Routes location={location} key={location.pathname}>
+      {/* Pages animate IN via PageShell. Exit animations around <Routes> are
+          deliberately absent: AnimatePresence mode="wait" can deadlock when the
+          incoming lazy route suspends, freezing the old page on screen. */}
+      <Routes>
           <Route element={<Layout />}>
             <Route
               path="/"
@@ -197,8 +194,7 @@ export default function App() {
               }
             />
           </Route>
-        </Routes>
-      </AnimatePresence>
+      </Routes>
     </AppErrorBoundary>
   );
 }
