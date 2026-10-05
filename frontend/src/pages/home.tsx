@@ -16,6 +16,7 @@ import {
 
 /* WebGL aurora — code-split so it never weighs down other routes */
 const AuroraCanvas = lazy(() => import("../components/aurora-canvas"));
+const SmartImage = lazy(() => import("../components/smart-image"));
 
 const posterFor = (show: Show, movies: Movie[], events: Event[]) =>
   show.showType === "MOVIE"
@@ -455,9 +456,13 @@ export function PosterV2({ show, movies, events, compact = false }: {
         aria-label={`${show.title} — ${d.toLocaleString("en-IN", { dateStyle: "medium" })} — from ${money(show.price)}`}
       >
         <div className="poster-v2__art" style={compact ? { aspectRatio: "16/9" } : undefined}>
-          {url
-            ? <img src={url} alt="" loading="lazy" />
-            : <div className="poster-v2__fallback" style={{ background: posterFallback(show.id) }}>{show.title}</div>}
+          <Suspense fallback={null}>
+            <SmartImage
+              src={url}
+              alt=""
+              fallback={<div className="poster-v2__fallback" style={{ background: posterFallback(show.id) }}>{show.title}</div>}
+            />
+          </Suspense>
           <span className="poster-v2__badge">{show.showType === "MOVIE" ? "Film" : "Live"}</span>
           <div className="poster-v2__shade" />
           <span className="poster-v2__hover-cta">View details <ArrowUpRight size={13} aria-hidden="true" /></span>
@@ -492,9 +497,13 @@ function EditorialCard({ show, events }: { show: Show; events: Event[] }) {
     <Spotlight className="editorial-card beam">
       <Link to={`/shows/${show.id}`} style={{ display: "contents" }} aria-label={`${show.title} — ${money(show.price)} — view details`}>
         <div className="editorial-card__art">
-          {url
-            ? <img src={url} alt="" loading="lazy" />
-            : <div className="editorial-card__fallback" style={{ background: posterFallback(show.id + 2) }} />}
+          <Suspense fallback={null}>
+            <SmartImage
+              src={url}
+              alt=""
+              fallback={<div className="editorial-card__fallback" style={{ background: posterFallback(show.id + 2) }} />}
+            />
+          </Suspense>
         </div>
         <div className="editorial-card__overlay" />
         <div className="editorial-card__body">

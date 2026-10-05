@@ -10,6 +10,7 @@ import { api } from "../api/eventix";
 import { money, dateTime, posterFallback } from "../lib/utils";
 import { saveBookingDraft } from "../lib/booking-draft";
 import { ticketTotal } from "../lib/booking-math";
+import SmartImage from "../components/smart-image";
 
 export function SeatSelectionPage() {
   const { id } = useParams<{ id: string }>();
@@ -171,7 +172,12 @@ export function SeatSelectionPage() {
           >
             <div style={{ display: "grid", gridTemplateColumns: "88px 1fr", minHeight: "96px" }}>
               <div style={{ position: "relative", background: posterFallback(show.id) }}>
-                {bannerUrl && <img src={bannerUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
+                <SmartImage
+                  src={bannerUrl}
+                  alt=""
+                  fallback={null}
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                />
               </div>
               <div style={{ padding: "1.25rem 1.375rem" }}>
                 <h2 className="font-display" style={{ fontSize: "1.375rem", marginBottom: "0.5rem" }}>{show.title}</h2>

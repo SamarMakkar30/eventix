@@ -9,6 +9,7 @@ import { api } from "../api/eventix";
 import { money, dateTime, dateOnly, posterFallback } from "../lib/utils";
 import { useAuth } from "../context/auth-context";
 import { Reveal, WordsReveal } from "../components/motion-kit";
+import SmartImage from "../components/smart-image";
 
 export function ShowDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -90,9 +91,11 @@ export function ShowDetailPage() {
     <>
       {/* ── HERO ── */}
       <div className="show-hero grain">
-        {bannerUrl
-          ? <img src={bannerUrl} alt="" />
-          : <div style={{ width: "100%", height: "100%", background: posterFallback(show.id) }} />}
+        <SmartImage
+          src={bannerUrl}
+          alt=""
+          fallback={<div style={{ width: "100%", height: "100%", background: posterFallback(show.id) }} />}
+        />
         <div className="show-hero__overlay" />
         <motion.div
           className="show-hero__content"
