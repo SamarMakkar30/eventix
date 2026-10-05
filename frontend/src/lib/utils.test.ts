@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cn, money, dateTime, dateOnly, initials, posterGradient } from "./utils";
+import { cn, money, dateTime, dateOnly, initials, posterFallback } from "./utils";
 
 describe("lib/utils", () => {
   describe("cn", () => {
@@ -36,11 +36,12 @@ describe("lib/utils", () => {
     });
   });
 
-  describe("posterGradient", () => {
-    it("deterministically returns fallback gradient name based on seed", () => {
-      expect(posterGradient(0)).toBe("ember");
-      expect(posterGradient(1)).toBe("sand");
-      expect(posterGradient(6)).toBe("ember");
+  describe("posterFallback", () => {
+    it("deterministically returns a fallback gradient based on seed", () => {
+      expect(posterFallback(0)).toBe(posterFallback(0));
+      expect(posterFallback(0)).toBe(posterFallback(6));
+      expect(posterFallback(1)).not.toBe(posterFallback(0));
+      expect(posterFallback(3)).toMatch(/^linear-gradient/);
     });
   });
 });

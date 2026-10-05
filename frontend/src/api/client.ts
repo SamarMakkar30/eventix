@@ -37,7 +37,14 @@ export async function request<T>(
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+    // Audit fix: bounded requests — a hung gateway can no longer wedge a
+    // button in its loading state forever.
+    const timeout = AbortSignal.timeout(15_000);
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers,
+      signal: init.signal ? AbortSignal.any([init.signal, timeout]) : timeout,
+    });
   } catch {
     throw new ApiError(
       0,

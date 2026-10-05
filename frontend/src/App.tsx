@@ -40,21 +40,21 @@ const AdminPage = lazy(() =>
 const NotFoundPage = lazy(() =>
   import("./pages/not-found").then((m) => ({ default: m.NotFoundPage })),
 );
+const DesignSystemGallery = lazy(() =>
+  import("./pages/design-system").then((m) => ({ default: m.DesignSystemGallery })),
+);
 
-function AnimatedPage({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
+/* Page transition wrapper — mounted per keyed route so exits can actually play */
+function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -63,130 +63,142 @@ export default function App() {
 
   return (
     <AppErrorBoundary>
-      <Routes location={location}>
-        {/* Layout shell — nav + footer, all child routes rendered via <Outlet> */}
-        <Route element={<Layout />}>
-          <Route
-            path="/"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <AnimatedPage><HomePage /></AnimatedPage>
-              </Suspense>
-            }
-          />
-          {/* /shows is the canonical browse route; /explore redirects for backwards compat */}
-          <Route
-            path="/shows"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <AnimatedPage><ShowsPage /></AnimatedPage>
-              </Suspense>
-            }
-          />
-          <Route path="/explore" element={<Navigate to="/shows" replace />} />
-          <Route path="/explore/:category" element={<Navigate to="/shows" replace />} />
-          <Route path="/search" element={<Navigate to="/shows" replace />} />
+      {/* AnimatePresence wraps the Routes (keyed by location) so page exit
+          animations play before the old tree unmounts. */}
+      <AnimatePresence mode="wait" initial={false}>
+        <Routes location={location} key={location.pathname}>
+          <Route element={<Layout />}>
+            <Route
+              path="/"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <PageShell><HomePage /></PageShell>
+                </Suspense>
+              }
+            />
+            <Route
+              path="/shows"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <PageShell><ShowsPage /></PageShell>
+                </Suspense>
+              }
+            />
+            <Route path="/explore" element={<Navigate to="/shows" replace />} />
+            <Route path="/explore/:category" element={<Navigate to="/shows" replace />} />
+            <Route path="/search" element={<Navigate to="/shows" replace />} />
 
-          <Route
-            path="/shows/:id"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <AnimatedPage><ShowDetailPage /></AnimatedPage>
-              </Suspense>
-            }
-          />
-          <Route
-            path="/shows/:id/seats"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <AnimatedPage><SeatSelectionPage /></AnimatedPage>
-              </Suspense>
-            }
-          />
+            <Route
+              path="/shows/:id"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <PageShell><ShowDetailPage /></PageShell>
+                </Suspense>
+              }
+            />
+            <Route
+              path="/shows/:id/seats"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <PageShell><SeatSelectionPage /></PageShell>
+                </Suspense>
+              }
+            />
 
-          {/* Protected routes */}
-          <Route
-            path="/checkout"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <Protected>
-                  <AnimatedPage><CheckoutPage /></AnimatedPage>
-                </Protected>
-              </Suspense>
-            }
-          />
-          <Route
-            path="/confirmation/:id"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <Protected>
-                  <AnimatedPage><ConfirmationPage /></AnimatedPage>
-                </Protected>
-              </Suspense>
-            }
-          />
-          <Route
-            path="/bookings"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <Protected>
-                  <AnimatedPage><BookingsPage /></AnimatedPage>
-                </Protected>
-              </Suspense>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <Protected>
-                  <AnimatedPage><ProfilePage /></AnimatedPage>
-                </Protected>
-              </Suspense>
-            }
-          />
+            {/* Protected routes */}
+            <Route
+              path="/checkout"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <Protected>
+                    <PageShell><CheckoutPage /></PageShell>
+                  </Protected>
+                </Suspense>
+              }
+            />
+            <Route
+              path="/confirmation/:id"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <Protected>
+                    <PageShell><ConfirmationPage /></PageShell>
+                  </Protected>
+                </Suspense>
+              }
+            />
+            <Route
+              path="/bookings"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <Protected>
+                    <PageShell><BookingsPage /></PageShell>
+                  </Protected>
+                </Suspense>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <Protected>
+                    <PageShell><ProfilePage /></PageShell>
+                  </Protected>
+                </Suspense>
+              }
+            />
 
-          {/* Admin only */}
-          <Route
-            path="/admin"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <AdminOnly>
-                  <AnimatedPage><AdminPage /></AnimatedPage>
-                </AdminOnly>
-              </Suspense>
-            }
-          />
+            {/* Admin only */}
+            <Route
+              path="/admin"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <AdminOnly>
+                    <PageShell><AdminPage /></PageShell>
+                  </AdminOnly>
+                </Suspense>
+              }
+            />
 
-          {/* Auth pages (full screen — still inside Layout shell but auth-shell covers viewport) */}
-          <Route
-            path="/login"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <LoginPage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <RegisterPage />
-              </Suspense>
-            }
-          />
+            {/* Auth pages — full-bleed split screens */}
+            <Route
+              path="/login"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <PageShell><LoginPage /></PageShell>
+                </Suspense>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <PageShell><RegisterPage /></PageShell>
+                </Suspense>
+              }
+            />
 
-          {/* 404 */}
-          <Route
-            path="*"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <NotFoundPage />
-              </Suspense>
-            }
-          />
-        </Route>
-      </Routes>
+            {/* Design system gallery (documented at /_design) */}
+            <Route
+              path="/_design"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <DesignSystemGallery />
+                </Suspense>
+              }
+            />
+
+            {/* 404 */}
+            <Route
+              path="*"
+              element={
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <PageShell><NotFoundPage /></PageShell>
+                </Suspense>
+              }
+            />
+          </Route>
+        </Routes>
+      </AnimatePresence>
     </AppErrorBoundary>
   );
 }

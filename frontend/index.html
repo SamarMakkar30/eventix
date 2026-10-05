@@ -3,12 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#F8F4E7" />
-    <meta name="description" content="Eventix — cinema and live experiences, beautifully booked." />
-    <title>Eventix — Find your next moment</title>
+    <meta name="theme-color" content="#1A1012" />
+    <meta name="description" content="Eventix — cinema and live experiences, beautifully booked. Reserve seats in seconds." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Eventix — Every great night starts with a ticket" />
+    <meta property="og:description" content="Premieres, concerts and one-night-only lineups — reserved in seconds, straight to your phone." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Eventix — Every great night starts with a ticket</title>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Apply the stored theme before first paint — no flash of the wrong theme.
+      try {
+        var t = localStorage.getItem("eventix_theme");
+        if (t !== "dark" && t !== "light") {
+          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

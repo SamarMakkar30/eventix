@@ -1,6 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { RotateCcw, TriangleAlert } from "lucide-react";
-import { Button } from "./ui";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -17,9 +16,9 @@ export class AppErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // Keep errors private; this boundary gives users a recovery path without exposing internals.
-    void error;
-    void info;
+    // Audit fix: previously discarded entirely — keep it on the console so
+    // failures are diagnosable in devtools without exposing anything to users.
+    console.error("Eventix crashed inside the app boundary:", error, info.componentStack);
   }
 
   render() {
@@ -34,10 +33,15 @@ export class AppErrorBoundary extends Component<
             <p>
               Your account and bookings are safe. Refresh to return to Eventix.
             </p>
-            <Button onClick={() => window.location.reload()}>
-              <RotateCcw size={16} />
-              Refresh Eventix
-            </Button>
+            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
+              <a href="/" className="btn btn--secondary" style={{ textDecoration: "none" }}>
+                Go to the marquee
+              </a>
+              <button className="btn btn--primary" onClick={() => window.location.reload()}>
+                <RotateCcw size={16} />
+                Refresh Eventix
+              </button>
+            </div>
           </div>
         </main>
       );

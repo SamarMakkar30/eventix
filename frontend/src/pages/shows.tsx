@@ -1,74 +1,40 @@
-import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { motion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "motion/react";
-import { Search, SlidersHorizontal, Star, Film, Zap, X } from "lucide-react";
+import {
+  Search, SlidersHorizontal, Film, Zap, X,
+  RefreshCw, Compass, AlertTriangle,
+} from "lucide-react";
 import { api } from "../api/eventix";
-import { money, dateOnly } from "../lib/utils";
-import type { Show, Movie, Event } from "../types/api";
+import { Stagger, StaggerItem, Tilt, Reveal } from "../components/motion-kit";
+import { PosterV2 } from "./home";
+import type { ShowType } from "../types/api";
 
-const FALLBACKS = ["ember", "sand", "dusk", "pine", "slate", "ochre"] as const;
 const SORT_OPTIONS = [
-  { value: "date-asc",   label: "Date: soonest first" },
-  { value: "date-desc",  label: "Date: latest first" },
-  { value: "price-asc",  label: "Price: low to high" },
-  { value: "price-desc", label: "Price: high to low" },
-  { value: "title",      label: "Title A–Z" },
-];
+  { value: "date-asc", label: "Date — soonest first" },
+  { value: "date-desc", label: "Date — latest first" },
+  { value: "price-asc", label: "Price — low to high" },
+  { value: "price-desc", label: "Price — high to low" },
+  { value: "title", label: "Title — A to Z" },
+] as const;
 
-function ShowCard({ show, movies, events }: { show: Show; movies: Movie[]; events: Event[] }) {
-  const url =
-    show.showType === "MOVIE"
-      ? movies.find((m) => m.id === show.movieId)?.posterUrl
-      : events.find((e) => e.id === show.eventId)?.bannerUrl;
-  const rating =
-    show.showType === "MOVIE" ? movies.find((m) => m.id === show.movieId)?.rating : null;
-  const ev = show.showType === "EVENT" ? events.find((e) => e.id === show.eventId) : null;
-  const fb = FALLBACKS[show.id % FALLBACKS.length]!;
-
-  return (
-    <Link to={`/shows/${show.id}`} className="poster-card">
-      <div className="poster-card__art">
-        {url
-          ? <img src={url} alt={show.title} loading="lazy" />
-          : <div className={`poster-card__fallback artwork--${fb}`} style={{ height: "100%" }} />}
-        <div className="poster-card__badge">
-          <span className={`badge ${show.showType === "MOVIE" ? "badge--accent" : "badge--pink"}`}>
-            {show.showType === "MOVIE" ? "Movie" : (ev?.category ?? "Event")}
-          </span>
-        </div>
-      </div>
-      <div className="poster-card__body">
-        <div className="poster-card__title">{show.title}</div>
-        <div className="poster-card__meta">{dateOnly(show.showDateTime)}</div>
-        <div className="poster-card__meta">{show.venueName}</div>
-        {rating != null && (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "0.8125rem", color: "var(--ev-text-muted)", marginTop: "0.25rem" }}>
-            <Star size={12} fill="currentColor" /> {rating.toFixed(1)}
-          </div>
-        )}
-        <div className="poster-card__footer">
-          <span className="poster-card__price">{money(show.price)}</span>
-          <span className="poster-card__link">Book →</span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
+/* ── Skeleton ─────────────────────────────────────────────────────────── */
 function ShowCardSkeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", borderRadius: "var(--ev-radius-card)", overflow: "hidden" }}>
       <div className="skeleton skeleton--card" style={{ aspectRatio: "2/3" }} />
       <div style={{ padding: "1rem", background: "var(--ev-surface)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        <div className="skeleton skeleton--text" style={{ width: "80%" }} />
-        <div className="skeleton skeleton--text" style={{ width: "55%" }} />
-        <div className="skeleton skeleton--text" style={{ width: "40%", marginTop: "0.5rem" }} />
+        <div className="skeleton" style={{ height: "1.0625rem", width: "80%" }} />
+        <div className="skeleton" style={{ height: "0.8125rem", width: "55%" }} />
       </div>
     </div>
   );
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   BROWSE — catalogue with URL-synced filters
+   ══════════════════════════════════════════════════════════════════════════ */
 export function ShowsPage() {
   const [params, setParams] = useSearchParams();
 
@@ -76,13 +42,38 @@ export function ShowsPage() {
   const searchQuery = params.get("q") ?? "";
   const sortBy = params.get("sort") ?? "date-asc";
 
+  /* Debounce keystrokes before they hit the URL (audit fix: was per-keystroke).
+     The input owns its text locally; every code path that clears filters
+     below also resets it, so no sync effect is needed. */
+  const [searchInput, setSearchInput] = useState(searchQuery);
+  const debounceRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    window.clearTimeout(debounceRef.current);
+    if (searchInput === searchQuery) return;
+    debounceRef.current = window.setTimeout(() => {
+      const next = new URLSearchParams(params);
+      if (searchInput) next.set("q", searchInput); else next.delete("q");
+      setParams(next, { replace: true });
+    }, 280);
+    return () => window.clearTimeout(debounceRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
+  const clearSearchOnly = () => { setSearchInput(""); setParam("q", ""); };
+  const clearAllFilters = () => { setSearchInput(""); setParams({}, { replace: true }); };
+
   function setParam(key: string, val: string) {
     const next = new URLSearchParams(params);
     if (val) next.set(key, val); else next.delete(key);
     setParams(next, { replace: true });
   }
 
-  const { data: shows = [], isLoading: showsLoading } = useQuery({ queryKey: ["shows"], queryFn: api.shows });
+  const {
+    data: shows = [],
+    isLoading: showsLoading,
+    isError: showsError,
+    refetch,
+  } = useQuery({ queryKey: ["shows"], queryFn: api.shows });
   const { data: movies = [] } = useQuery({ queryKey: ["movies"], queryFn: api.movies });
   const { data: events = [] } = useQuery({ queryKey: ["events"], queryFn: api.events });
 
@@ -94,7 +85,7 @@ export function ShowsPage() {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
-        (s) => s.title.toLowerCase().includes(q) || s.venueName.toLowerCase().includes(q)
+        (s) => s.title.toLowerCase().includes(q) || s.venueName.toLowerCase().includes(q),
       );
     }
 
@@ -113,143 +104,161 @@ export function ShowsPage() {
   }, [shows, typeFilter, searchQuery, sortBy]);
 
   const hasFilters = typeFilter !== "ALL" || searchQuery;
+  const typeCounts = useMemo(() => ({
+    ALL: shows.length,
+    MOVIE: shows.filter((s) => s.showType === "MOVIE").length,
+    EVENT: shows.filter((s) => s.showType === "EVENT").length,
+  }), [shows]);
 
   return (
     <div className="page">
       <div className="container">
-        {/* Page header */}
-        <div style={{ marginBottom: "2rem" }}>
-          <p className="eyebrow" style={{ marginBottom: "0.5rem" }}>All shows</p>
-          <h1 style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "0.25rem" }}>
-            Browse &amp; discover
+        {/* Header */}
+        <Reveal style={{ marginBottom: "2rem" }}>
+          <p className="section-head__eyebrow">The full catalogue</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)", lineHeight: 1.02, margin: "0.5rem 0 0.5rem" }}>
+            Browse &amp; <em>discover</em>
           </h1>
           {!showsLoading && (
             <p className="text-muted" style={{ fontSize: "0.9375rem" }}>
-              {filtered.length} show{filtered.length !== 1 ? "s" : ""} found
+              {filtered.length} {filtered.length === 1 ? "show" : "shows"}
+              {hasFilters ? " matching your filters" : " on the calendar"}
             </p>
           )}
-        </div>
+        </Reveal>
 
         {/* Filter bar */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
-          {/* Type chips */}
-          <div className="filter-bar" role="group" aria-label="Filter by type">
-            {(["ALL", "MOVIE", "EVENT"] as const).map((t) => (
-              <button
-                key={t}
-                className={`filter-chip${typeFilter === t ? " filter-chip--active" : ""}`}
-                onClick={() => setParam("type", t === "ALL" ? "" : t)}
-                aria-pressed={typeFilter === t}
-              >
-                {t === "ALL" && <SlidersHorizontal size={14} />}
-                {t === "MOVIE" && <Film size={14} />}
-                {t === "EVENT" && <Zap size={14} />}
-                {t === "ALL" ? "All shows" : t === "MOVIE" ? "Movies" : "Events"}
-              </button>
-            ))}
-          </div>
-
-          {/* Search + sort row */}
-          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
-            <div className="search-wrap" style={{ flex: "1 1 220px", maxWidth: "380px" }}>
-              <Search className="search-icon" size={16} />
-              <input
-                id="shows-search"
-                type="search"
-                className="input"
-                placeholder="Search shows or venues…"
-                value={searchQuery}
-                onChange={(e) => setParam("q", e.target.value)}
-                aria-label="Search shows"
-              />
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "auto", flexWrap: "wrap" }}>
-              <label htmlFor="shows-sort" className="field-label" style={{ whiteSpace: "nowrap" }}>Sort by</label>
-              <select
-                id="shows-sort"
-                className="input"
-                value={sortBy}
-                onChange={(e) => setParam("sort", e.target.value)}
-                style={{ width: "auto", minWidth: "180px" }}
-              >
-                {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Active filter pills */}
-          {hasFilters && (
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-              <span className="text-subtle" style={{ fontSize: "0.8125rem" }}>Active filters:</span>
-              {typeFilter !== "ALL" && (
+        <Reveal style={{ marginBottom: "2rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div className="filter-bar" role="group" aria-label="Filter by type">
+              {(["ALL", "MOVIE", "EVENT"] as const).map((t: "ALL" | ShowType) => (
                 <button
-                  className="badge badge--accent"
-                  style={{ cursor: "pointer", border: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
-                  onClick={() => setParam("type", "")}
-                  aria-label={`Remove ${typeFilter} filter`}
+                  key={t}
+                  className={`chip-v2${typeFilter === t ? " chip-v2--active" : ""}`}
+                  onClick={() => setParam("type", t === "ALL" ? "" : t)}
+                  aria-pressed={typeFilter === t}
                 >
-                  {typeFilter} <X size={11} />
+                  {t === "ALL" && <SlidersHorizontal size={14} aria-hidden="true" />}
+                  {t === "MOVIE" && <Film size={14} aria-hidden="true" />}
+                  {t === "EVENT" && <Zap size={14} aria-hidden="true" />}
+                  {t === "ALL" ? "All shows" : t === "MOVIE" ? "Movies" : "Live events"}
+                  <span className="chip-v2__count" aria-hidden="true">{typeCounts[t]}</span>
                 </button>
-              )}
-              {searchQuery && (
-                <button
-                  className="badge badge--neutral"
-                  style={{ cursor: "pointer", border: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
-                  onClick={() => setParam("q", "")}
-                  aria-label="Remove search filter"
-                >
-                  "{searchQuery}" <X size={11} />
-                </button>
-              )}
-              <button
-                className="btn btn--ghost btn--sm"
-                onClick={() => setParams({}, { replace: true })}
-                style={{ height: "auto", padding: "0.2rem 0.625rem", fontSize: "0.8125rem" }}
-              >
-                Clear all
-              </button>
+              ))}
             </div>
-          )}
-        </div>
+
+            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+              <div className="search-wrap" style={{ flex: "1 1 220px", maxWidth: "380px" }}>
+                <Search className="search-icon" size={16} aria-hidden="true" />
+                <input
+                  id="shows-search"
+                  type="search"
+                  className="input"
+                  placeholder="Search titles or venues…"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  aria-label="Search shows"
+                />
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "auto", flexWrap: "wrap" }}>
+                <label htmlFor="shows-sort" className="field-label" style={{ whiteSpace: "nowrap" }}>Sort by</label>
+                <select
+                  id="shows-sort"
+                  className="input"
+                  value={sortBy}
+                  onChange={(e) => setParam("sort", e.target.value)}
+                  style={{ width: "auto", minWidth: "190px" }}
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {hasFilters && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}
+              >
+                <span className="text-subtle" style={{ fontSize: "0.8125rem" }}>Active filters:</span>
+                {typeFilter !== "ALL" && (
+                  <button
+                    className="badge badge--accent"
+                    style={{ cursor: "pointer", border: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                    onClick={() => setParam("type", "")}
+                    aria-label={`Remove ${typeFilter} filter`}
+                  >
+                    {typeFilter} <X size={11} aria-hidden="true" />
+                  </button>
+                )}
+                {searchQuery && (
+                  <button
+                    className="badge badge--neutral"
+                    style={{ cursor: "pointer", border: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                    onClick={clearSearchOnly}
+                    aria-label="Remove search filter"
+                  >
+                    &ldquo;{searchQuery}&rdquo; <X size={11} aria-hidden="true" />
+                  </button>
+                )}
+                <button
+                  className="btn btn--ghost btn--sm"
+                  onClick={clearAllFilters}
+                  style={{ height: "auto", padding: "0.2rem 0.625rem", fontSize: "0.8125rem" }}
+                >
+                  Clear all
+                </button>
+              </motion.div>
+            )}
+          </div>
+        </Reveal>
 
         {/* Grid */}
         {showsLoading ? (
           <div className="grid--cards">
             {Array.from({ length: 8 }).map((_, i) => <ShowCardSkeleton key={i} />)}
           </div>
+        ) : showsError ? (
+          /* Failure ≠ empty catalogue (audit fix) */
+          <div className="error-state">
+            <AlertTriangle className="error-state__icon" style={{ color: "var(--ev-warning)" }} />
+            <div className="error-state__title">The catalogue won't load</div>
+            <p className="error-state__desc">We couldn't reach the box office. Check your connection and try again.</p>
+            <button className="btn btn--primary" onClick={() => void refetch()}>
+              <RefreshCw size={16} /> Try again
+            </button>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <Search className="empty-state__icon" />
-            <div className="empty-state__title">No shows found</div>
+            <Compass className="empty-state__icon" />
+            <div className="empty-state__title">Nothing matches — yet</div>
             <p className="empty-state__desc">
-              {hasFilters ? "Try adjusting your filters or search term." : "No shows are available yet."}
+              {hasFilters ? "Loosen the filters or try a different search." : "The calendar is being finalised. Check back shortly."}
             </p>
             {hasFilters && (
-              <button className="btn btn--secondary" onClick={() => setParams({}, { replace: true })}>
+              <button className="btn btn--secondary" onClick={clearAllFilters}>
                 Clear filters
               </button>
             )}
           </div>
         ) : (
-          <div className="grid--cards">
-            <AnimatePresence mode="popLayout">
-              {filtered.map((show, i) => (
-                <motion.div
-                  key={show.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.3) }}
-                >
-                  <ShowCard show={show} movies={movies} events={events} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+          <Stagger
+            /* Re-keyed on filter change so each result set plays its entrance */
+            key={`${typeFilter}|${searchQuery}|${sortBy}`}
+            gap={0.045}
+            style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(208px, 100%), 1fr))", gap: "1.25rem" }}
+          >
+            {filtered.map((show) => (
+              <StaggerItem key={show.id}>
+                <Tilt max={5}>
+                  <PosterV2 show={show} movies={movies} events={events} />
+                </Tilt>
+              </StaggerItem>
+            ))}
+          </Stagger>
         )}
       </div>
     </div>

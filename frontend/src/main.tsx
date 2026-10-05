@@ -6,8 +6,12 @@ import App from "./App";
 import { AuthProvider } from "./context/auth-context";
 import { ToastProvider } from "./context/toast-context";
 import "@fontsource-variable/geist";
+import "@fontsource/instrument-serif";
+import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource/geist-mono";
 import "./styles/design-system.css";
 import "./styles/global.css";
+import "./styles/atelier.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {
