@@ -75,11 +75,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  uploadShowThumbnail: (id: number, file: File) => {
-    const body = new FormData();
-    body.append("file", file);
-    return request<Show>(`/api/catalog/shows/${id}/thumbnail`, { method: "POST", body });
-  },
   deleteShow: (id: number) =>
     request<void>(`/api/catalog/shows/${id}`, { method: "DELETE" }),
   /** Admin: fetch all users' bookings */

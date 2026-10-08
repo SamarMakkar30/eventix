@@ -13,7 +13,6 @@ import com.eventix.catalog.model.Venue;
 import com.eventix.catalog.repository.ShowRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,7 +27,6 @@ public class ShowService {
     private final EventService eventService;
     private final VenueService venueService;
     private final InventoryClient inventoryClient;
-    private final S3UploadService s3UploadService;
 
     public ShowResponse create(ShowRequest request, String authorizationHeader) {
         validateExactlyOneTarget(request);
@@ -72,12 +70,6 @@ public class ShowService {
     public ShowResponse findById(Long id) {
         Show show = getOrThrow(id);
         return enrich(show);
-    }
-
-    public ShowResponse updateThumbnail(Long id, MultipartFile file) {
-        Show show = getOrThrow(id);
-        show.setThumbnailUrl(s3UploadService.upload("thumbnails", file));
-        return enrich(showRepository.save(show));
     }
 
     Show getOrThrow(Long id) {

@@ -222,7 +222,6 @@ function CreateShowModal({ movies, events, venues, onClose }: {
 }) {
   const { show: toast } = useToast();
   const qc = useQueryClient();
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     showType: "MOVIE",
     movieId: movies[0]?.id ?? 0,
@@ -291,7 +290,7 @@ function CreateShowModal({ movies, events, venues, onClose }: {
         totalSeats: Number(form.totalSeats),
         price: Number(form.price),
       });
-      return thumbnailFile ? api.uploadShowThumbnail(created.id, thumbnailFile) : created;
+      return created;
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["shows"] });
@@ -468,10 +467,6 @@ function CreateShowModal({ movies, events, venues, onClose }: {
           <input id="cs-thumbnail" type="url" className="input" placeholder="https://example.com/show-image.jpg" value={form.thumbnailUrl} onChange={(e) => set("thumbnailUrl", e.target.value)} />
         </div>
 
-        <div className="field">
-          <label className="field-label" htmlFor="cs-thumbnail-file">Upload thumbnail <span className="text-muted" style={{ fontWeight: 400 }}>(JPG, PNG or GIF, max 5 MB)</span></label>
-          <input id="cs-thumbnail-file" type="file" className="input" accept="image/jpeg,image/png,image/gif" onChange={(e) => setThumbnailFile(e.target.files?.[0] ?? null)} />
-        </div>
 
         <div className="field">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
