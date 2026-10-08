@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "motion/react";
 import {
   BarChart2, Ticket, Film, Plus, Trash2, RefreshCw,
-  Users, DollarSign, ChevronRight, X, AlertTriangle, Inbox,
+  Users, DollarSign, ChevronRight, X, AlertTriangle, Inbox, Pencil,
   MapPin, Sparkles,
 } from "lucide-react";
 import { api } from "../api/eventix";
@@ -132,7 +132,7 @@ function StatCard({ label, value, sub, icon, accent }: {
 }
 
 /* ── Show row ─────────────────────────────────────────────────────────── */
-function ShowRow({ show, onDelete }: { show: Show; onDelete: (show: Show) => void }) {
+function ShowRow({ show, onEdit, onDelete }: { show: Show; onEdit: (show: Show) => void; onDelete: (show: Show) => void }) {
   const isPast = new Date(show.showDateTime) < new Date();
   return (
     <tr>
@@ -160,6 +160,14 @@ function ShowRow({ show, onDelete }: { show: Show; onDelete: (show: Show) => voi
       <td style={{ fontVariantNumeric: "tabular-nums" }}>{show.totalSeats.toLocaleString("en-IN")}</td>
       <td>
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button
+            className="btn btn--ghost btn--icon btn--sm"
+            onClick={() => onEdit(show)}
+            title={`Edit ${show.title}`}
+            aria-label={`Edit ${show.title}`}
+          >
+            <Pencil size={14} aria-hidden="true" />
+          </button>
           <button
             className="btn btn--ghost btn--icon btn--sm"
             onClick={() => onDelete(show)}
@@ -217,20 +225,20 @@ function BookingsTable({ bookings }: { bookings: Array<{ id: number; showTitle: 
 }
 
 /* ── Create show modal ────────────────────────────────────────────────── */
-function CreateShowModal({ movies, events, venues, onClose }: {
-  movies: Movie[]; events: Event[]; venues: Venue[]; onClose: () => void;
+function CreateShowModal({ movies, events, venues, editingShow, onClose }: {
+  movies: Movie[]; events: Event[]; venues: Venue[]; editingShow?: Show; onClose: () => void;
 }) {
   const { show: toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState({
-    showType: "MOVIE",
-    movieId: movies[0]?.id ?? 0,
-    eventId: events[0]?.id ?? 0,
-    thumbnailUrl: "",
-    venueId: venues[0]?.id ?? 1,
-    showDateTime: "",
-    totalSeats: 100,
-    price: 250,
+    showType: editingShow?.showType ?? "MOVIE",
+    movieId: editingShow?.movieId ?? movies[0]?.id ?? 0,
+    eventId: editingShow?.eventId ?? events[0]?.id ?? 0,
+    thumbnailUrl: editingShow?.thumbnailUrl ?? "",
+    venueId: editingShow?.venueId ?? venues[0]?.id ?? 1,
+    showDateTime: editingShow ? new Date(editingShow.showDateTime).toISOString().slice(0, 16) : "",
+    totalSeats: editingShow?.totalSeats ?? 100,
+    price: editingShow?.price ?? 250,
   });
 
   const [showNewMovie, setShowNewMovie] = useState(false);
@@ -280,7 +288,7 @@ function CreateShowModal({ movies, events, venues, onClose }: {
 
   const create = useMutation({
     mutationFn: async () => {
-      const created = await api.createShow({
+      const payload = {
         showType: form.showType as "MOVIE" | "EVENT",
         movieId: form.showType === "MOVIE" ? form.movieId : null,
         eventId: form.showType === "EVENT" ? form.eventId : null,
@@ -289,12 +297,12 @@ function CreateShowModal({ movies, events, venues, onClose }: {
         showDateTime: new Date(form.showDateTime).toISOString(),
         totalSeats: Number(form.totalSeats),
         price: Number(form.price),
-      });
-      return created;
+      };
+      return editingShow ? api.updateShow(editingShow.id, payload) : api.createShow(payload);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["shows"] });
-      toast("success", "Show created", "The new show is live on the marquee.");
+      toast("success", editingShow ? "Show updated" : "Show created", editingShow ? "The show details were updated." : "The new show is live on the marquee.");
       onClose();
     },
     onError: (err) => toast("error", "Creation failed", (err as ApiError)?.message ?? "Please check the form and try again."),
@@ -548,7 +556,7 @@ function CreateShowModal({ movies, events, venues, onClose }: {
           onClick={() => create.mutate()}
           disabled={create.isPending || !canSubmit}
         >
-          {create.isPending ? "" : "Create show"}
+          {create.isPending ? "" : editingShow ? "Save changes" : "Create show"}
         </button>
       </div>
     </AdminModal>
@@ -722,6 +730,7 @@ export function AdminPage() {
   const [createMovieOpen, setCreateMovieOpen] = useState(false);
   const [createEventOpen, setCreateEventOpen] = useState(false);
   const [createVenueOpen, setCreateVenueOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Show | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Show | null>(null);
 
   const { data: shows = [], isLoading: showsLoading, isError: showsError, refetch: refetchShows } = useQuery({ queryKey: ["shows"], queryFn: api.shows, staleTime: 0, refetchInterval: 15_000, refetchOnWindowFocus: true });
@@ -903,7 +912,7 @@ export function AdminPage() {
                   </thead>
                   <tbody>
                     {shows.map((show) => (
-                      <ShowRow key={show.id} show={show} onDelete={setDeleteTarget} />
+                      <ShowRow key={show.id} show={show} onEdit={setEditTarget} onDelete={setDeleteTarget} />
                     ))}
                   </tbody>
                 </table>
@@ -1127,12 +1136,14 @@ export function AdminPage() {
       </main>
 
       {/* Create modal */}
-      {createOpen && (
+      {(createOpen || editTarget !== null) && (
         <CreateShowModal
+          key={editTarget?.id ?? "create"}
           movies={movies}
           events={events}
           venues={venues}
-          onClose={() => setCreateOpen(false)}
+          editingShow={editTarget ?? undefined}
+          onClose={() => { setCreateOpen(false); setEditTarget(null); }}
         />
       )}
 

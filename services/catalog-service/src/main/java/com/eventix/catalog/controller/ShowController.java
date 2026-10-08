@@ -24,6 +24,11 @@ public class ShowController {
         return ResponseEntity.status(HttpStatus.CREATED).body(showService.create(request, authorization));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ShowResponse> update(@PathVariable Long id, @Valid @RequestBody ShowRequest request) {
+        return ResponseEntity.ok(showService.update(id, request));
+    }
+
     @GetMapping({"", "/"})
     public ResponseEntity<List<ShowResponse>> findAll() {
         return ResponseEntity.ok(showService.findAll());

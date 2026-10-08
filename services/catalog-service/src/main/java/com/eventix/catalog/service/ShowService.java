@@ -72,6 +72,25 @@ public class ShowService {
         return enrich(show);
     }
 
+    public ShowResponse update(Long id, ShowRequest request) {
+        validateExactlyOneTarget(request);
+        Show show = getOrThrow(id);
+        String title = request.getShowType() == ShowType.MOVIE
+                ? movieService.getOrThrow(request.getMovieId()).getTitle()
+                : eventService.getOrThrow(request.getEventId()).getName();
+        Venue venue = venueService.getOrThrow(request.getVenueId());
+
+        show.setShowType(request.getShowType());
+        show.setMovieId(request.getMovieId());
+        show.setEventId(request.getEventId());
+        show.setThumbnailUrl(request.getThumbnailUrl());
+        show.setVenueId(request.getVenueId());
+        show.setShowDateTime(request.getShowDateTime());
+        show.setPrice(request.getPrice());
+        show.setTotalSeats(request.getTotalSeats());
+        return toResponse(showRepository.save(show), title, venue.getName());
+    }
+
     Show getOrThrow(Long id) {
         return showRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Show " + id + " not found"));

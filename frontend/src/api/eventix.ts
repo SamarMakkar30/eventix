@@ -75,6 +75,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  updateShow: (id: number, input: Omit<Show, "id" | "title" | "venueName">) =>
+    request<Show>(`/api/catalog/shows/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }),
   deleteShow: (id: number) =>
     request<void>(`/api/catalog/shows/${id}`, { method: "DELETE" }),
   /** Admin: fetch all users' bookings */
