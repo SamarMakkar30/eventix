@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import {
-  Minus, Plus, ChevronLeft, CalendarDays, MapPin, Users,
-  ArrowRight, RefreshCw, AlertTriangle, Ticket,
+  ChevronLeft, CalendarDays, MapPin, Users,
+  ArrowRight, RefreshCw, AlertTriangle, Ticket, X,
 } from "lucide-react";
 import { api } from "../api/eventix";
 import { money, dateTime, posterFallback } from "../lib/utils";
@@ -13,11 +14,12 @@ import { ticketTotal } from "../lib/booking-math";
 import SmartImage from "../components/smart-image";
 
 export function SeatSelectionPage() {
+  useDocumentMeta("Choose your seats — Eventix", "Pick exact seats on the interactive Eventix seat map.");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  /* Raw selection; the effective quantity is derived against live inventory,
-     so a mid-flight availability drop clamps it automatically (audit fix). */
-  const [rawQuantity, setRawQuantity] = useState(1);
+  /* Seats the customer clicked, by grid index — quantity is derived from
+     this set, so live availability drops auto-remove newly booked seats. */
+  const [picked, setPicked] = useState<Set<number>>(new Set());
 
   const {
     data: show,
@@ -47,7 +49,6 @@ export function SeatSelectionPage() {
 
   const available = inventory?.availableSeats;
   const maxQty = available !== undefined ? Math.max(1, Math.min(10, available)) : 10;
-  const quantity = Math.min(rawQuantity, maxQty);
 
   if (showLoading || invLoading) {
     return (
@@ -112,33 +113,57 @@ export function SeatSelectionPage() {
 
   const isPast = new Date(show.showDateTime) < new Date();
   const isSoldOut = available === 0;
-  const total = ticketTotal(show.price, quantity);
-
   const bannerUrl =
     show.showType === "MOVIE"
       ? movies.find((m) => m.id === show.movieId)?.posterUrl
       : events.find((e) => e.id === show.eventId)?.bannerUrl;
 
-  /* Representative seat map (visual aid — the backend holds the real seats) */
+  /* ── Interactive seat map ────────────────────────────────────────────
+     Representative layout (the booking API takes a quantity; seat IDs are
+     presentation until the backend grows a seat-level contract). Booked
+     seats are a deterministic scatter seeded by show id, so the map looks
+     like a real house instead of a filled rectangle. */
   const ROWS = 5;
   const COLS = 12;
-  const totalVisual = ROWS * COLS;
-  const bookedCount = show.totalSeats > 0
-    ? Math.min(totalVisual, Math.round(((show.totalSeats - available) / show.totalSeats) * totalVisual))
+  const bookedFraction = show.totalSeats > 0
+    ? Math.min(1, Math.max(0, (show.totalSeats - available) / show.totalSeats))
     : 0;
-  const seatState = (i: number) => {
-    if (i < bookedCount) return "booked" as const;
-    const freeIndex = i - bookedCount;
-    if (freeIndex < quantity) return "selected" as const;
-    return "free" as const;
+  const hash = (n: number) => {
+    let x = Math.sin(n * 12.9898 + show.id * 78.233) * 43758.5453;
+    x -= Math.floor(x);
+    return x;
   };
+  const isBooked = (i: number) => hash(i + 1) < bookedFraction;
+  /* Selection is always filtered against the current booked set — a live
+     availability drop can't leave a booked seat in the customer's basket. */
+  const selected = new Set(Array.from(picked).filter((i) => !isBooked(i)));
+  const quantity = selected.size;
+  const seatLabel = (r: number, c: number) => `${String.fromCharCode(65 + r)}${c + 1}`;
+  const selectedLabels = Array.from(selected)
+    .sort((a, b) => a - b)
+    .map((i) => seatLabel(Math.floor(i / COLS), i % COLS));
+  /* quantity 0 (nothing picked yet) is valid UI state — skip the 1..10 guard */
+  const total = quantity >= 1 ? ticketTotal(show.price, quantity) : 0;
+
+  function toggleSeat(i: number) {
+    setPicked((prev) => {
+      const next = new Set(Array.from(prev).filter((x) => !isBooked(x)));
+      if (next.has(i)) {
+        next.delete(i);
+      } else if (next.size < maxQty) {
+        next.add(i);
+      }
+      return next;
+    });
+  }
 
   function handleProceed() {
-    if (!show || isPast || isSoldOut || available === undefined) return;
+    if (!show || isPast || isSoldOut || available === undefined || quantity < 1) return;
     saveBookingDraft({
       show,
       quantity: Math.min(quantity, Math.min(10, available)),
       availableSeats: available,
+      seats: selectedLabels,
     });
     navigate("/checkout");
   }
@@ -157,7 +182,7 @@ export function SeatSelectionPage() {
             Choose your <em>seats</em>
           </h1>
           <p className="text-muted" style={{ marginBottom: "2rem" }}>
-            Pick how many tickets you need — we'll hold the best available seats together.
+            Click the seats you want on the map below — prices update as you pick.
           </p>
         </motion.div>
 
@@ -205,32 +230,63 @@ export function SeatSelectionPage() {
             transition={{ duration: 0.45, delay: 0.1 }}
           >
             <div className="seat-section">
-              <div className="stage-v2">Screen this way</div>
-              <div className="seat-map" role="img" aria-label={`Representative seat map: ${bookedCount} of ${totalVisual} shown seats booked, ${quantity} selected`}>
-                {Array.from({ length: ROWS }, (_, r) => (
-                  <div key={r} className="seat-row" aria-hidden="true">
-                    {Array.from({ length: COLS }, (_, c) => {
-                      const i = r * COLS + c;
-                      const state = seatState(i);
-                      return (
-                        <div
-                          key={c}
-                          className={`seat-v2${state === "booked" ? " seat-v2--booked" : state === "selected" ? " seat-v2--selected" : ""}`}
-                          style={{ transitionDelay: `${(i % COLS) * 8}ms`, marginRight: c === Math.floor(COLS / 2) - 1 ? "1.25rem" : undefined }}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
+              <div className="stage-v2" aria-hidden="true">Screen this way</div>
+              <div className="seat-map" role="group" aria-label="Seat map — click seats to pick or release them">
+                {Array.from({ length: ROWS }, (_, r) => {
+                  const aisleAfter = Math.floor(COLS / 2) - 1;
+                  return (
+                    <div key={r} className="seat-row">
+                      <span className="seat-row__label" aria-hidden="true">{String.fromCharCode(65 + r)}</span>
+                      {Array.from({ length: COLS }, (_, c) => {
+                        const i = r * COLS + c;
+                        const booked = isBooked(i);
+                        const isSelected = selected.has(i);
+                        return (
+                          <button
+                            key={c}
+                            type="button"
+                            className={`seat-v2${booked ? " seat-v2--booked" : isSelected ? " seat-v2--selected" : ""}`}
+                            onClick={() => toggleSeat(i)}
+                            disabled={booked}
+                            aria-pressed={isSelected}
+                            aria-label={`Seat ${seatLabel(r, c)}${booked ? " — booked" : isSelected ? " — selected" : " — available"}`}
+                            title={`${seatLabel(r, c)}${booked ? " · Booked" : isSelected ? " · Your pick" : " · Available"}`}
+                          />
+                        );
+                      }).flatMap((el, c) => (
+                        c === aisleAfter ? [el, <span key={`aisle-${c}`} className="seat-row__aisle" aria-hidden="true" />] : [el]
+                      ))}
+                      <span className="seat-row__label" aria-hidden="true">{String.fromCharCode(65 + r)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="seat-selection-bar" aria-live="polite">
+                <span className="seat-selection-bar__count">
+                  {quantity === 0 ? "No seats picked" : `${quantity} seat${quantity > 1 ? "s" : ""} picked`}
+                  <span style={{ color: "var(--ev-text-subtle)", fontWeight: 500 }}> / up to {maxQty}</span>
+                </span>
+                {selectedLabels.length > 0 && (
+                  <span className="seat-selection-bar__seats">{selectedLabels.join(" · ")}</span>
+                )}
+                {selectedLabels.length > 0 && (
+                  <button
+                    className="btn btn--ghost btn--sm"
+                    style={{ marginLeft: "auto", padding: "0.25rem 0.625rem" }}
+                    onClick={() => setPicked(new Set())}
+                  >
+                    <X size={13} aria-hidden="true" /> Clear
+                  </button>
+                )}
               </div>
               <div className="seat-legend" style={{ marginTop: "1.25rem", justifyContent: "center" }}>
                 <div className="seat-legend-item">
                   <div className="seat-legend-dot" style={{ background: "var(--ev-surface)", border: "1px solid var(--ev-border-strong)" }} />
-                  Free
+                  Available — click to pick
                 </div>
                 <div className="seat-legend-item">
                   <div className="seat-legend-dot" style={{ background: "var(--ev-accent)", boxShadow: "0 0 0 3px var(--ev-gold-wash)" }} />
-                  Your pick
+                  Your pick — click to release
                 </div>
                 <div className="seat-legend-item">
                   <div className="seat-legend-dot" style={{ background: "var(--ev-bg-raised)", opacity: 0.4 }} />
@@ -243,56 +299,28 @@ export function SeatSelectionPage() {
           {/* Quantity + summary */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem", alignItems: "start" }} className="responsive-2col-lg">
             <motion.div
-              className="quantity-stepper"
+              className="card"
+              style={{ padding: "1.25rem 1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.15 }}
             >
-              <div>
-                <div className="quantity-stepper__label">Number of tickets</div>
-                {available > 0 && available < 20 && (
-                  <div style={{ fontSize: "0.8125rem", color: "var(--ev-danger)", marginTop: "0.25rem", fontWeight: 600 }}>
-                    Only {available} seats remaining!
-                  </div>
-                )}
-                {available === 0 && (
-                  <div style={{ fontSize: "0.8125rem", color: "var(--ev-text-subtle)", marginTop: "0.25rem" }}>
-                    This show just sold out — try another date.
-                  </div>
-                )}
-              </div>
-              <div className="quantity-stepper__controls">
-                <motion.button
-                  className="btn btn--secondary btn--icon btn--sm"
-                  onClick={() => setRawQuantity((q) => Math.max(1, q - 1))}
-                  disabled={quantity <= 1}
-                  aria-label="Decrease quantity"
-                  whileTap={{ scale: 0.88 }}
-                >
-                  <Minus size={16} aria-hidden="true" />
-                </motion.button>
-                <motion.span
-                  key={quantity}
-                  className="quantity-stepper__count"
-                  aria-live="polite"
-                  aria-label={`${quantity} tickets selected`}
-                  initial={{ scale: 1.25, color: "var(--ev-gold)" }}
-                  animate={{ scale: 1, color: "var(--ev-text)" }}
-                  transition={{ duration: 0.25 }}
-                  style={{ display: "inline-block" }}
-                >
-                  {quantity}
-                </motion.span>
-                <motion.button
-                  className="btn btn--secondary btn--icon btn--sm"
-                  onClick={() => setRawQuantity((q) => q + 1)}
-                  disabled={quantity >= maxQty}
-                  aria-label="Increase quantity"
-                  whileTap={{ scale: 0.88 }}
-                >
-                  <Plus size={16} aria-hidden="true" />
-                </motion.button>
-              </div>
+              <div style={{ fontWeight: 650 }}>How picking works</div>
+              <p style={{ fontSize: "0.9rem", color: "var(--ev-text-muted)", lineHeight: 1.7 }}>
+                Click any free seat on the map to add it — click again to release. We’ll
+                hold up to <strong>{maxQty}</strong> seats per booking.
+              </p>
+              {available > 0 && available < 20 && (
+                <div style={{ fontSize: "0.8125rem", color: "var(--ev-danger)", fontWeight: 600 }}>
+                  Only {available} seats remaining — pick fast!
+                </div>
+              )}
+              {available === 0 && (
+                <div style={{ fontSize: "0.8125rem", color: "var(--ev-text-subtle)" }}>
+                  This show just sold out — try another date.
+                </div>
+              )}
+              <p className="kbd-hint">Seats auto-release if availability changes while you pick.</p>
             </motion.div>
 
             <motion.div
@@ -303,7 +331,10 @@ export function SeatSelectionPage() {
             >
               <div style={{ fontWeight: 700, fontSize: "1.0625rem", fontFamily: "var(--ev-font-display)" }}>Order summary</div>
               <div className="order-summary__row">
-                <span className="order-summary__label">{money(show.price)} × {quantity} ticket{quantity > 1 ? "s" : ""}</span>
+                <span className="order-summary__label">
+                  {money(show.price)} × {quantity} ticket{quantity > 1 ? "s" : ""}
+                  {selectedLabels.length > 0 && <> · seats {selectedLabels.join(", ")}</>}
+                </span>
                 <span className="order-summary__value">{money(show.price * quantity)}</span>
               </div>
               <div className="order-summary__row">
@@ -329,8 +360,11 @@ export function SeatSelectionPage() {
                   className="btn btn--primary btn--lg btn-shine"
                   style={{ width: "100%" }}
                   onClick={handleProceed}
+                  disabled={quantity < 1}
                 >
-                  Continue to checkout <ArrowRight size={17} aria-hidden="true" />
+                  {quantity < 1
+                    ? "Pick your seats to continue"
+                    : <>Continue to checkout <ArrowRight size={17} aria-hidden="true" /></>}
                 </button>
               )}
             </motion.div>

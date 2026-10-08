@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
@@ -36,6 +37,7 @@ function ShowCardSkeleton() {
    BROWSE — catalogue with URL-synced filters
    ══════════════════════════════════════════════════════════════════════════ */
 export function ShowsPage() {
+  useDocumentMeta("Browse shows & events — Eventix", "The full Eventix catalogue: movies and live events, filterable and sortable.");
   const [params, setParams] = useSearchParams();
 
   const typeFilter = params.get("type") ?? "ALL";

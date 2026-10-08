@@ -296,6 +296,78 @@
   margin-inline: auto;
   line-height: 1.7;
 }
+
+/* Floating ambient orbs — soft burgundy/brass light behind the type */
+.hero-v2__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  opacity: 0.55;
+}
+.hero-v2__orb--a {
+  width: 42vw; height: 42vw;
+  left: -12vw; top: 8vh;
+  background: radial-gradient(circle, var(--ev-glow-accent), transparent 65%);
+  animation: orb-drift 16s ease-in-out infinite alternate;
+}
+.hero-v2__orb--b {
+  width: 34vw; height: 34vw;
+  right: -10vw; bottom: 4vh;
+  background: radial-gradient(circle, var(--ev-glow-gold), transparent 65%);
+  animation: orb-drift 20s ease-in-out infinite alternate-reverse;
+}
+@keyframes orb-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(4vw, -3vh, 0) scale(1.12); }
+}
+
+/* Gold dust — tiny rising particles across the hero */
+.hero-v2__dust {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-v2__dust span {
+  position: absolute;
+  bottom: -12px;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--ev-gold-bright);
+  opacity: 0;
+  box-shadow: 0 0 6px 1px var(--ev-gold-bright);
+  animation: dust-rise var(--dust-dur, 12s) linear infinite;
+  animation-delay: var(--dust-delay, 0s);
+  left: var(--dust-x, 50%);
+}
+@keyframes dust-rise {
+  0%   { transform: translateY(0) scale(1); opacity: 0; }
+  12%  { opacity: 0.85; }
+  70%  { opacity: 0.5; }
+  100% { transform: translateY(-92vh) scale(0.4); opacity: 0; }
+}
+
+/* Sheen sweep on the italic display line */
+.display em, .display .em { position: relative; }
+.sheen-text {
+  background: linear-gradient(110deg, var(--ev-gold-bright) 0%, #F7E7B0 25%, var(--ev-gold-bright) 50%, #C9A961 75%, var(--ev-gold-bright) 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sheen-slide 7s ease-in-out infinite;
+}
+@keyframes sheen-slide {
+  0%, 100% { background-position: 0% center; }
+  50%      { background-position: 100% center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-v2__orb--a, .hero-v2__orb--b, .hero-v2__dust span, .sheen-text { animation: none; }
+  .sheen-text { color: var(--ev-gold-bright); background: none; -webkit-background-clip: initial; background-clip: initial; }
+}
 .hero-v2__scroll {
   position: absolute;
   left: 50%;
@@ -379,6 +451,17 @@
   transition: opacity var(--ev-duration-base);
 }
 .poster-v2:hover .poster-v2__shade { opacity: 1; }
+.poster-v2__shine {
+  position: absolute;
+  top: -20%; left: -80%;
+  width: 55%; height: 140%;
+  background: linear-gradient(100deg, transparent, rgba(255, 244, 214, 0.18), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.75s var(--ev-ease-emphasized);
+  pointer-events: none;
+  z-index: 1;
+}
+.poster-v2:hover .poster-v2__shine { left: 130%; }
 .poster-v2__badge {
   position: absolute;
   top: 0.625rem; left: 0.625rem;
@@ -483,6 +566,58 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Featured premiere spotlight ──────────────────────────────────────── */
+.premiere {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  border-radius: var(--ev-radius-panel);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ev-gold) 30%, var(--ev-border));
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-elevated);
+}
+@media (min-width: 900px) { .premiere { grid-template-columns: 0.9fr 1.1fr; } }
+.premiere__art {
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+}
+.premiere__art img, .premiere__art .premiere__fallback { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.premiere__art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent 55%, var(--ev-surface) 99%), linear-gradient(to top, rgba(10,6,7,.5), transparent 45%);
+}
+@media (max-width: 899px) { .premiere__art::after { background: linear-gradient(to top, var(--ev-surface) 4%, transparent 45%); } }
+.premiere__fallback { display: grid; place-items: center; font-family: var(--ev-font-display); font-size: clamp(1.75rem, 4vw, 3rem); color: #F5EDDC; text-shadow: 0 4px 24px rgba(0,0,0,.4); padding: 2rem; text-align: center; }
+.premiere__body {
+  padding: clamp(1.5rem, 3.5vw, 2.75rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+}
+.premiere__title { font-family: var(--ev-font-display); font-size: clamp(2rem, 4.5vw, 3.5rem); line-height: 1.02; }
+.premiere__meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; color: var(--ev-text-muted); font-size: 0.9375rem; }
+.premiere__meta span { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+/* 3) Nav underline grows on hover (gold) */
+.nav-v2__link::before {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: 1px;
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: 50% 50%;
+  width: 1.25rem; height: 2px;
+  border-radius: 2px;
+  background: var(--ev-gold);
+  transition: transform var(--ev-duration-base) var(--ev-ease-emphasized);
+}
+.nav-v2__link:hover::before, .nav-v2__link.active::before { transform: translateX(-50%) scaleX(1); }
+.nav-v2__link.active::after { display: none; }
+
 /* ── Category tiles v2 ───────────────────────────────────────────────── */
 .cat-tile {
   position: relative;
@@ -581,40 +716,100 @@
 .step-row__title { font-size: 1.25rem; font-weight: 650; letter-spacing: -0.02em; margin-bottom: 0.375rem; }
 .step-row__desc { color: var(--ev-text-muted); line-height: 1.7; max-width: 52ch; }
 
-/* ── Seat map v2 ─────────────────────────────────────────────────────── */
+/* ── Seat map v2 — interactive seat picking ──────────────────────────── */
+.seat-section { align-items: center; }
 .seat-map { display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }
-.seat-row { display: flex; gap: 0.375rem; }
-.seat-row__aisle { width: 1rem; }
-.seat-v2 {
-  width: 22px;
-  height: 22px;
+.seat-row { display: flex; gap: 0.375rem; align-items: center; }
+.seat-row__label {
+  font-family: var(--ev-font-mono);
+  font-size: 0.625rem;
+  color: var(--ev-text-subtle);
+  width: 1rem;
+  text-align: center;
+}
+.seat-row__aisle { width: 1.25rem; flex-shrink: 0; }
+button.seat-v2 {
+  width: 26px;
+  height: 26px;
+  padding: 0;
   border-radius: 6px 6px 4px 4px;
   background: var(--ev-surface);
   border: 1px solid var(--ev-border-strong);
+  cursor: pointer;
   transition: transform var(--ev-duration-fast) var(--ev-ease-spring),
               background var(--ev-duration-fast), border-color var(--ev-duration-fast),
               box-shadow var(--ev-duration-fast);
 }
-.seat-v2:hover:not(.seat-v2--booked) { transform: scale(1.18); border-color: var(--ev-gold); }
+button.seat-v2:active:not(:disabled) { transform: scale(0.9); }
+button.seat-v2:focus-visible {
+  outline: 2px solid var(--ev-gold);
+  outline-offset: 2px;
+}
+button.seat-v2:hover:not(:disabled) { transform: scale(1.2); border-color: var(--ev-gold); }
 .seat-v2--selected {
-  background: var(--ev-accent);
-  border-color: var(--ev-accent);
+  background: var(--ev-accent) !important;
+  border-color: var(--ev-accent) !important;
   box-shadow: 0 0 0 3px var(--ev-gold-wash), 0 4px 14px var(--ev-glow-accent);
 }
-.seat-v2--booked { background: var(--ev-bg-raised); border-color: var(--ev-border); opacity: 0.35; }
+.seat-v2--selected:hover { transform: scale(1.1); }
+.seat-v2--booked, .seat-v2--booked:hover {
+  background: var(--ev-bg-raised);
+  border-color: var(--ev-border);
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 .stage-v2 {
-  width: min(320px, 80%);
-  padding: 0.5rem 1rem;
+  width: min(300px, 72%);
+  padding: 0.5rem 1.25rem;
   text-align: center;
+  font-family: var(--ev-font-mono);
   font-size: 0.625rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--ev-gold);
   border: 1px solid color-mix(in srgb, var(--ev-gold) 35%, transparent);
   border-radius: 999px;
   background: var(--ev-gold-wash);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+/* screen glow strip beneath the pill, spanning the seating blocks */
+.stage-v2::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -0.625rem;
+  width: min(420px, 100vw);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ev-gold) 70%, transparent), transparent);
+}
+@media (max-width: 640px) {
+  button.seat-v2 { width: 22px; height: 22px; }
+  .seat-row { gap: 0.25rem; }
+  .seat-row__aisle { width: 0.75rem; }
+}
+/* selection summary bar under the map */
+.seat-selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: 999px;
+  background: var(--ev-bg-raised);
+  border: 1px solid var(--ev-border);
+}
+.seat-selection-bar__count { font-variant-numeric: tabular-nums; font-weight: 700; }
+.seat-selection-bar__seats {
+  font-family: var(--ev-font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  color: var(--ev-gold);
 }
 
 /* ── Ticket v2 ───────────────────────────────────────────────────────── */
@@ -702,11 +897,21 @@
   line-height: 0.9;
   letter-spacing: -0.02em;
   text-align: center;
+  background: linear-gradient(100deg, transparent 38%, color-mix(in srgb, var(--ev-gold) 65%, transparent) 50%, transparent 62%);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
   color: transparent;
   -webkit-text-stroke: 1px color-mix(in srgb, var(--ev-text-subtle) 55%, transparent);
   user-select: none;
   white-space: nowrap;
+  animation: wordmark-shimmer 9s ease-in-out infinite;
 }
+@keyframes wordmark-shimmer {
+  0%, 100% { background-position: 0% center; }
+  50%      { background-position: 100% center; }
+}
+@media (prefers-reduced-motion: reduce) { .footer-v2__wordmark { animation: none; background: none; } }
 .footer-v2__cols {
   width: min(var(--page-max), calc(100% - 3rem));
   margin-inline: auto;
@@ -714,7 +919,7 @@
   gap: 2rem;
   padding: 3rem 0 2rem;
 }
-@media (min-width: 768px) { .footer-v2__cols { grid-template-columns: 1.7fr 1fr 1fr; } }
+@media (min-width: 768px) { .footer-v2__cols { grid-template-columns: 1.6fr 1fr 1fr 1fr; } }
 .footer-v2__link { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9375rem; color: var(--ev-text-muted); padding: 0.2rem 0; transition: color var(--ev-duration-fast), transform var(--ev-duration-fast); }
 .footer-v2__link:hover { color: var(--ev-gold); transform: translateX(3px); }
 

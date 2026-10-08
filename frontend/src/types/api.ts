@@ -85,4 +85,6 @@ export interface BookingDraft {
   show: Show;
   quantity: number;
   availableSeats: number;
+  /** Optional seat labels picked on the seat map (e.g. ["A5","A6"]) */
+  seats?: string[];
 }

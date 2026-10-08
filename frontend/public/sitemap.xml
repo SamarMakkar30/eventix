@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>http://65.0.176.1:30300/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>http://65.0.176.1:30300/shows</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>http://65.0.176.1:30300/about</loc><priority>0.5</priority></url>
+  <url><loc>http://65.0.176.1:30300/faq</loc><priority>0.5</priority></url>
+  <url><loc>http://65.0.176.1:30300/privacy</loc><priority>0.3</priority></url>
+  <url><loc>http://65.0.176.1:30300/terms</loc><priority>0.3</priority></url>
+  <url><loc>http://65.0.176.1:30300/refunds</loc><priority>0.3</priority></url>
+  <url><loc>http://65.0.176.1:30300/cookies</loc><priority>0.2</priority></url>
+  <url><loc>http://65.0.176.1:30300/login</loc><priority>0.4</priority></url>
+  <url><loc>http://65.0.176.1:30300/register</loc><priority>0.4</priority></url>
+</urlset>

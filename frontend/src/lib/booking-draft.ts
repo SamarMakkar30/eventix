@@ -8,6 +8,9 @@ const draftSchema = z.object({
   show: z.object({ id: z.number(), showType: z.enum(["MOVIE", "EVENT"]), movieId: z.number().nullable(), eventId: z.number().nullable(), title: z.string(), venueId: z.number(), venueName: z.string(), showDateTime: z.string(), price: z.number(), totalSeats: z.number() }),
   quantity: z.number().int().min(1).max(10),
   availableSeats: z.number().int().nonnegative(),
+  /** Seat labels the customer picked, e.g. ["A5","A6"] — cosmetic until the
+      backend gains a seat-level contract (booking API takes quantity only). */
+  seats: z.array(z.string().min(1).max(4)).max(10).optional(),
 });
 const storedSchema = z.object({ draft: draftSchema, expiresAt: z.number().finite() });
 

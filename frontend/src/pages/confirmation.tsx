@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
@@ -49,6 +50,7 @@ function fireConfetti() {
 }
 
 export function ConfirmationPage() {
+  useDocumentMeta("Booking confirmed — Eventix", "Your Eventix booking reference, ticket and downloads.");
   const { id } = useParams<{ id: string }>();
 
   const { data: booking, isLoading, error, refetch } = useQuery({

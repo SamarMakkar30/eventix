@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import {
@@ -35,6 +36,7 @@ export function ShowDetailPage() {
 
   const { data: movies = [] } = useQuery({ queryKey: ["movies"], queryFn: api.movies });
   const { data: events = [] } = useQuery({ queryKey: ["events"], queryFn: api.events });
+  useDocumentMeta(`Eventix — ${show?.title ?? "Show"}`, `Show times, venue, availability and booking for ${show?.title ?? "this show"}.`);
 
   if (showLoading) return <DetailSkeleton />;
 

@@ -43,6 +43,12 @@ const NotFoundPage = lazy(() =>
 const DesignSystemGallery = lazy(() =>
   import("./pages/design-system").then((m) => ({ default: m.DesignSystemGallery })),
 );
+const PrivacyPage = lazy(() => import("./pages/legal").then((m) => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import("./pages/legal").then((m) => ({ default: m.TermsPage })));
+const RefundsPage = lazy(() => import("./pages/legal").then((m) => ({ default: m.RefundsPage })));
+const CookiesPage = lazy(() => import("./pages/legal").then((m) => ({ default: m.CookiesPage })));
+const FaqPage = lazy(() => import("./pages/faq-about").then((m) => ({ default: m.FaqPage })));
+const AboutPage = lazy(() => import("./pages/faq-about").then((m) => ({ default: m.AboutPage })));
 
 /* Page transition wrapper — mounted per keyed route so exits can actually play */
 function PageShell({ children }: { children: React.ReactNode }) {
@@ -172,6 +178,32 @@ export default function App() {
                   <PageShell><RegisterPage /></PageShell>
                 </Suspense>
               }
+            />
+
+            {/* Content & legal pages */}
+            <Route
+              path="/about"
+              element={<Suspense fallback={<RouteLoadingFallback />}><PageShell><AboutPage /></PageShell></Suspense>}
+            />
+            <Route
+              path="/faq"
+              element={<Suspense fallback={<RouteLoadingFallback />}><PageShell><FaqPage /></PageShell></Suspense>}
+            />
+            <Route
+              path="/privacy"
+              element={<Suspense fallback={<RouteLoadingFallback />}><PageShell><PrivacyPage /></PageShell></Suspense>}
+            />
+            <Route
+              path="/terms"
+              element={<Suspense fallback={<RouteLoadingFallback />}><PageShell><TermsPage /></PageShell></Suspense>}
+            />
+            <Route
+              path="/refunds"
+              element={<Suspense fallback={<RouteLoadingFallback />}><PageShell><RefundsPage /></PageShell></Suspense>}
+            />
+            <Route
+              path="/cookies"
+              element={<Suspense fallback={<RouteLoadingFallback />}><PageShell><CookiesPage /></PageShell></Suspense>}
             />
 
             {/* Design system gallery (documented at /_design) */}

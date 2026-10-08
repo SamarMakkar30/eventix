@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useScroll, useSpring } from "motion/react";
 import { Ticket, Sun, Moon, LogOut, User, ShieldCheck, ArrowUpRight } from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { useToast } from "../context/toast-context";
 import { initials } from "../lib/utils";
 import { startSmoothScroll, stopSmoothScroll, scrollToTop, scrollToAnchor } from "../lib/smooth-scroll";
+import { CookieConsent } from "./cookie-consent";
 
 /* ── Theme ────────────────────────────────────────────────────────────── */
 function useTheme() {
@@ -77,6 +78,22 @@ export function ScrollRestore() {
   return null;
 }
 
+/* ── Gold scroll-progress hairline ────────────────────────────────────── */
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 26, mass: 0.4 });
+  return (
+    <motion.div
+      aria-hidden="true"
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: 2,
+        background: "linear-gradient(90deg, var(--ev-accent), var(--ev-gold))",
+        transformOrigin: "0% 50%", scaleX, zIndex: 80,
+      }}
+    />
+  );
+}
+
 /* ── Layout ───────────────────────────────────────────────────────────── */
 export function Layout() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -141,6 +158,7 @@ export function Layout() {
     <>
       <SmoothScroll />
       <ScrollRestore />
+      <ScrollProgress />
 
       {/* ── HEADER ── */}
       <header className={`header-v2${scrolled ? " header-v2--scrolled" : ""}`}>
@@ -344,6 +362,18 @@ export function Layout() {
               <Link to="/shows" className="footer-v2__link">All shows</Link>
               <Link to="/shows?type=MOVIE" className="footer-v2__link">Movies</Link>
               <Link to="/shows?type=EVENT" className="footer-v2__link">Live events</Link>
+              <Link to="/about" className="footer-v2__link">About</Link>
+              <Link to="/faq" className="footer-v2__link">FAQ</Link>
+            </div>
+          </div>
+          <div>
+            <h5 style={{ fontSize: "0.6875rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ev-text-subtle)", marginBottom: "1rem" }}>Legal &amp; support</h5>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+              <Link to="/privacy" className="footer-v2__link">Privacy policy</Link>
+              <Link to="/terms" className="footer-v2__link">Terms of service</Link>
+              <Link to="/refunds" className="footer-v2__link">Refunds &amp; cancellations</Link>
+              <Link to="/cookies" className="footer-v2__link">Cookie policy</Link>
+              <a href="mailto:support@eventix.app" className="footer-v2__link">support@eventix.app</a>
             </div>
           </div>
           <div>
@@ -383,6 +413,8 @@ export function Layout() {
           <span>Payments are simulated — no real transactions occur.</span>
         </div>
       </footer>
+
+      <CookieConsent />
     </>
   );
 }

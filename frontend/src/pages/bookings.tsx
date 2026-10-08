@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
@@ -213,6 +214,7 @@ function BookingCardSkeleton() {
    MY BOOKINGS
    ══════════════════════════════════════════════════════════════════════════ */
 export function BookingsPage() {
+  useDocumentMeta("My bookings — Eventix", "Your Eventix bookings: upcoming shows, tickets, cancellations and downloads.");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
 

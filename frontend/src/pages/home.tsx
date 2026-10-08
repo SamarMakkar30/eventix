@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo } from "react";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
@@ -17,6 +18,7 @@ import {
 /* WebGL aurora — code-split so it never weighs down other routes */
 const AuroraCanvas = lazy(() => import("../components/aurora-canvas"));
 const SmartImage = lazy(() => import("../components/smart-image"));
+import { PosterRing } from "../components/poster-ring";
 
 const posterFor = (show: Show, movies: Movie[], events: Event[]) =>
   show.showType === "MOVIE"
@@ -27,6 +29,7 @@ const posterFor = (show: Show, movies: Movie[], events: Event[]) =>
    HOME — cinematic editorial landing
    ══════════════════════════════════════════════════════════════════════════ */
 export function HomePage() {
+  useDocumentMeta("Eventix — Every great night starts with a ticket", "Premieres, concerts and one-night-only lineups — reserved in seconds.");
   const {
     data: shows = [],
     isLoading: showsLoading,
@@ -63,6 +66,20 @@ export function HomePage() {
           </Suspense>
         </div>
         <div className="hero-v2__veil" aria-hidden="true" />
+        <div className="hero-v2__orb hero-v2__orb--a" aria-hidden="true" />
+        <div className="hero-v2__orb hero-v2__orb--b" aria-hidden="true" />
+        <div className="hero-v2__dust" aria-hidden="true">
+          {Array.from({ length: 14 }, (_, i) => (
+            <span
+              key={i}
+              style={{
+                "--dust-x": `${(i * 7.3 + 8) % 96}%`,
+                "--dust-delay": `${(i * 1.37) % 11}s`,
+                "--dust-dur": `${9 + (i % 5) * 2.4}s`,
+              } as React.CSSProperties}
+            />
+          ))}
+        </div>
 
         <div className="hero-v2__content container">
           <motion.p
@@ -77,7 +94,7 @@ export function HomePage() {
           <h1 className="display-hero" style={{ color: "var(--ev-hero-ink)", margin: "1.375rem 0 1.5rem", textShadow: "0 4px 40px rgba(0,0,0,.35)" }}>
             <WordsReveal text="Every great night" delay={0.3} />
             <br />
-            <span style={{ fontStyle: "italic", color: "var(--ev-gold-bright)" }}>
+            <span className="sheen-text" style={{ fontStyle: "italic" }}>
               <WordsReveal text="starts with a ticket." delay={0.55} />
             </span>
           </h1>
@@ -169,6 +186,54 @@ export function HomePage() {
         </div>
       )}
 
+      {/* ───────────────────── FEATURED PREMIERE ───────────────────── */}
+      {upcomingShows.length > 0 && (() => {
+        const feature = upcoming[0] ?? upcomingShows[0];
+        const url = posterFor(feature, movies, events);
+        const d = new Date(feature.showDateTime);
+        return (
+          <section className="section-v2" aria-labelledby="premiere-title">
+            <div className="container">
+              <Reveal>
+                <div className="section-head">
+                  <div>
+                    <p className="section-head__eyebrow">Next premiere</p>
+                    <h2 id="premiere-title" className="display-section">First in <em>line</em></h2>
+                  </div>
+                </div>
+              </Reveal>
+              <Reveal delay={0.06}>
+                <div className="premiere grain beam beam--on">
+                  <div className="premiere__art">
+                    {url
+                      ? <img src={url} alt="" />
+                      : <div className="premiere__fallback" style={{ background: posterFallback(feature.id) }}>{feature.title}</div>}
+                  </div>
+                  <div className="premiere__body">
+                    <span className="mono-ref" style={{ color: "var(--ev-gold)" }}>
+                      {feature.showType === "MOVIE" ? "FILM PREMIERE" : "LIVE EVENT"} · {money(feature.price)} onwards
+                    </span>
+                    <div className="premiere__title">{feature.title}</div>
+                    <div className="premiere__meta">
+                      <span><CalendarDays size={15} aria-hidden="true" /> {d.toLocaleString("en-IN", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}</span>
+                      <span><MapPin size={15} aria-hidden="true" /> {feature.venueName}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+                      <Magnetic>
+                        <Link to={`/shows/${feature.id}`} className="btn btn--primary btn--lg btn-shine">
+                          Book this premiere <ArrowRight size={17} aria-hidden="true" />
+                        </Link>
+                      </Magnetic>
+                      <Link to="/shows" className="btn btn--secondary">All shows</Link>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </section>
+        );
+      })()}
+
       {/* Data failure notice — honest, not silently empty */}
       {showsError && (
         <div className="container" style={{ paddingTop: "2rem" }}>
@@ -182,7 +247,7 @@ export function HomePage() {
         </div>
       )}
 
-      {/* ───────────────────── NOW SHOWING (RAIL) ───────────────────── */}
+      {/* ───────────────────── THE MARQUEE — 3D POSTER RING ───────────────────── */}
       {showsLoading ? (
         <div className="section-v2 container">
           <div className="scroll-rail scroll-rail--poster">
@@ -192,31 +257,13 @@ export function HomePage() {
           </div>
         </div>
       ) : movieShows.length > 0 ? (
-        <section className="section-v2" aria-labelledby="now-showing-title">
-          <div className="container">
-            <Reveal>
-              <div className="section-head">
-                <div>
-                  <p className="section-head__eyebrow">In cinemas</p>
-                  <h2 id="now-showing-title" className="display-section">On screens <em>tonight</em></h2>
-                </div>
-                <Link to="/shows?type=MOVIE" className="btn btn--ghost btn--sm">
-                  All films <ArrowRight size={15} aria-hidden="true" />
-                </Link>
-              </div>
-            </Reveal>
-            <div className="scroll-rail scroll-rail--poster">
-              <Stagger className="scroll-rail" style={{ gap: "1.25rem", overflow: "visible" }}>
-                {movieShows.map((show) => (
-                  <StaggerItem key={show.id} style={{ width: "min(208px, 58vw)", flexShrink: 0 }}>
-                    <Tilt max={6}>
-                      <PosterV2 show={show} movies={movies} events={events} />
-                    </Tilt>
-                  </StaggerItem>
-                ))}
-              </Stagger>
+        <section aria-label="Now showing in cinemas">
+          <Reveal style={{ paddingTop: "clamp(2.5rem, 6vw, 4.5rem)" }}>
+            <div className="container" style={{ textAlign: "center", marginBottom: "0.5rem" }}>
+              <h2 className="display-section">On screens <em>tonight</em></h2>
             </div>
-          </div>
+          </Reveal>
+          <PosterRing shows={movieShows} movies={movies} events={events} />
         </section>
       ) : null}
 
@@ -412,7 +459,14 @@ export function HomePage() {
       </section>
 
       {/* ───────────────────── FINAL CTA ───────────────────── */}
-      <section className="section-v2" aria-labelledby="cta-title">
+      <section
+        className="section-v2 grain"
+        aria-labelledby="cta-title"
+        style={{
+          background:
+            "radial-gradient(90% 120% at 50% 120%, var(--ev-glow-accent), transparent 65%), radial-gradient(60% 90% at 50% -20%, var(--ev-glow-gold), transparent 70%)",
+        }}
+      >
         <div className="container" style={{ textAlign: "center" }}>
           <Parallax distance={24}>
             <Reveal>
@@ -465,6 +519,7 @@ export function PosterV2({ show, movies, events, compact = false }: {
           </Suspense>
           <span className="poster-v2__badge">{show.showType === "MOVIE" ? "Film" : "Live"}</span>
           <div className="poster-v2__shade" />
+          <div className="poster-v2__shine" aria-hidden="true" />
           <span className="poster-v2__hover-cta">View details <ArrowUpRight size={13} aria-hidden="true" /></span>
         </div>
         <div className="poster-v2__body">

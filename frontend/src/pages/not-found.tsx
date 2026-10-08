@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { motion } from "motion/react";
 import { ArrowRight, Compass } from "lucide-react";
 
 export function NotFoundPage() {
+  useDocumentMeta("Page not found — Eventix", "The page you are after does not exist.");
   return (
     <div className="not-found" style={{ minHeight: "100svh" }}>
       {/* Ambient glow */}

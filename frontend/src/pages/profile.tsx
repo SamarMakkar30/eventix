@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import {
@@ -10,6 +11,7 @@ import { money, dateOnly } from "../lib/utils";
 import { CountUp, Reveal } from "../components/motion-kit";
 
 export function ProfilePage() {
+  useDocumentMeta("My profile — Eventix", "Your Eventix account details and booking activity.");
   const { user } = useAuth();
 
   const { data: bookings = [], isLoading, error, refetch } = useQuery({

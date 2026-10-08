@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  AlertTriangle, CalendarDays, MapPin, Ticket, CheckCircle2,
+  AlertTriangle, CalendarDays, MapPin, Ticket, CheckCircle2, Armchair,
   ArrowRight, Lock, ShieldCheck, RefreshCw,
 } from "lucide-react";
 import { api } from "../api/eventix";
@@ -15,6 +16,7 @@ import type { ApiError } from "../api/client";
 const STEPS = ["Review", "Payment"] as const;
 
 export function CheckoutPage() {
+  useDocumentMeta("Secure checkout — Eventix", "Review your selection and pay — no hidden fees.");
   const navigate = useNavigate();
   const { show: toast } = useToast();
   const qc = useQueryClient();
@@ -24,6 +26,7 @@ export function CheckoutPage() {
 
   const draft = getBookingDraft();
   const { show, quantity } = draft ?? { show: null, quantity: 0 };
+  const seatLabels = draft?.seats ?? [];
 
   /* Audit fix: revalidate live inventory on entry — a draft can go stale
      while the user hesits, and selling seats that no longer exist is how
@@ -127,6 +130,12 @@ export function CheckoutPage() {
                     <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       <MapPin size={15} aria-hidden="true" /> {show.venueName}
                     </span>
+                    {seatLabels.length > 0 && (
+                      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Armchair size={15} aria-hidden="true" />
+                        <span className="mono-ref" style={{ color: "var(--ev-gold)" }}>{seatLabels.join(", ")}</span>
+                      </span>
+                    )}
                     {available !== undefined && (
                       <span style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--ev-success)" }}>
                         <ShieldCheck size={15} aria-hidden="true" /> {available} seats still available — you're good

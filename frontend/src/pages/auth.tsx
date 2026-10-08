@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
@@ -93,6 +94,7 @@ function PasswordField({
    LOGIN
    ══════════════════════════════════════════════════════════════════════════ */
 export function LoginPage() {
+  useDocumentMeta("Sign in — Eventix", "Sign in to your Eventix account to book movies and live events.");
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { login, isAuthenticated } = useAuth();
@@ -227,6 +229,7 @@ export function LoginPage() {
    REGISTER
    ══════════════════════════════════════════════════════════════════════════ */
 export function RegisterPage() {
+  useDocumentMeta("Create account — Eventix", "Create a free Eventix account — thirty seconds to your first ticket.");
   const navigate = useNavigate();
   const { register, isAuthenticated } = useAuth();
   const { show: toast } = useToast();

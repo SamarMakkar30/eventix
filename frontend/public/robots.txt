@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /checkout
+Disallow: /profile
+Disallow: /_design
+
+Sitemap: http://65.0.176.1:30300/sitemap.xml

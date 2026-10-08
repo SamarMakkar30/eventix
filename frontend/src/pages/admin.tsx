@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useDocumentMeta } from "../lib/use-document-meta";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -313,6 +314,7 @@ function CreateShowModal({ movies, events, venues, onClose }: {
    ADMIN
    ══════════════════════════════════════════════════════════════════════════ */
 export function AdminPage() {
+  useDocumentMeta("Admin studio — Eventix", "Eventix operations dashboard.");
   const { show: toast } = useToast();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("overview");
