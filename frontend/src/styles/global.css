@@ -89,7 +89,8 @@ input,textarea,select{font-family:inherit}ul,ol{margin:0;padding:0;list-style:no
 .input:focus-visible{border-color:var(--ev-accent);box-shadow:0 0 0 3px var(--ev-pink-wash)}
 .input--error{border-color:var(--ev-danger)}
 textarea.input{height:auto;padding:.75rem .875rem;resize:vertical;min-height:6rem}
-select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%235C4743' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;background-size:1rem;padding-right:2.5rem;cursor:pointer}
+select.input, .field select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-color: var(--ev-input); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%235C4743' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .75rem center; background-size: 1rem 1rem; padding-right: 2.5rem !important; cursor: pointer; }
+select::-ms-expand { display: none; }
 .search-wrap{position:relative}
 .search-icon{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--ev-text-subtle);pointer-events:none}
 .search-wrap .input{padding-left:2.5rem}
@@ -386,7 +387,8 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 /* field — used by old Input component in ui.tsx */
 .field { display: flex; flex-direction: column; gap: .375rem; }
 .field > span { font-size: .875rem; font-weight: 500; color: var(--ev-text-muted); }
-.field input, .field select { width: 100%; height: 2.75rem; padding: 0 .875rem; background: var(--ev-input); color: var(--ev-text); border: 1px solid var(--ev-border-strong); border-radius: var(--ev-radius-control); font-size: .9375rem; outline: none; font-family: inherit; transition: border-color var(--ev-duration-fast); }
+.field input { width: 100%; height: 2.75rem; padding: 0 .875rem; background: var(--ev-input); color: var(--ev-text); border: 1px solid var(--ev-border-strong); border-radius: var(--ev-radius-control); font-size: .9375rem; outline: none; font-family: inherit; transition: border-color var(--ev-duration-fast); }
+.field select { width: 100%; height: 2.75rem; padding-left: .875rem; color: var(--ev-text); border: 1px solid var(--ev-border-strong); border-radius: var(--ev-radius-control); font-size: .9375rem; outline: none; font-family: inherit; transition: border-color var(--ev-duration-fast); }
 .field input:focus-visible, .field select:focus-visible { border-color: var(--ev-accent); box-shadow: 0 0 0 3px var(--ev-pink-wash); }
 .field small[role=alert] { font-size: .8125rem; color: var(--ev-danger); }
 

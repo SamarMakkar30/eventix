@@ -76,6 +76,13 @@ public class ShowService {
                 .orElseThrow(() -> new ResourceNotFoundException("Show " + id + " not found"));
     }
 
+    public void delete(Long id) {
+        if (!showRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Show " + id + " not found");
+        }
+        showRepository.deleteById(id);
+    }
+
     private void validateExactlyOneTarget(ShowRequest request) {
         boolean hasMovie = request.getMovieId() != null;
         boolean hasEvent = request.getEventId() != null;

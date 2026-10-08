@@ -24,7 +24,7 @@ public class ShowController {
         return ResponseEntity.status(HttpStatus.CREATED).body(showService.create(request, authorization));
     }
 
-    @GetMapping
+    @GetMapping({"", "/"})
     public ResponseEntity<List<ShowResponse>> findAll() {
         return ResponseEntity.ok(showService.findAll());
     }
@@ -32,5 +32,11 @@ public class ShowController {
     @GetMapping("/{id}")
     public ResponseEntity<ShowResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(showService.findById(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        showService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -56,6 +56,11 @@ const BOOKING: import("../types/api").Booking = {
   createdAt: "2026-10-01T10:00:00Z",
 };
 
+export const mockShows: import("../types/api").Show[] = [SHOW];
+export const mockMovies: import("../types/api").Movie[] = [MOVIE];
+export const mockEvents: import("../types/api").Event[] = [EVENT];
+export const mockVenues: import("../types/api").Venue[] = [VENUE];
+
 export const handlers = [
   // Auth
   http.post(`${BASE}/api/auth/login`, async ({ request }) => {
@@ -96,30 +101,105 @@ export const handlers = [
 
   // Catalog
   http.get(`${BASE}/api/catalog/shows`, () =>
-    HttpResponse.json([SHOW]),
+    HttpResponse.json(mockShows),
   ),
 
   http.get(`${BASE}/api/catalog/shows/:id`, ({ params }) => {
-    if (Number(params.id) === 101) return HttpResponse.json(SHOW);
+    const s = mockShows.find((x) => x.id === Number(params.id));
+    if (s) return HttpResponse.json(s);
     return HttpResponse.json({ message: "Not found" }, { status: 404 });
   }),
 
   http.post(`${BASE}/api/catalog/shows`, async ({ request }) => {
-    const body = await request.json();
-    return HttpResponse.json({ id: 999, ...SHOW, ...(body as object) });
+    const body = (await request.json()) as Partial<import("../types/api").Show>;
+    const movie = mockMovies.find((m) => m.id === body.movieId);
+    const event = mockEvents.find((e) => e.id === body.eventId);
+    const venue = mockVenues.find((v) => v.id === body.venueId);
+    const created: import("../types/api").Show = {
+      id: Date.now(),
+      showType: body.showType ?? "MOVIE",
+      movieId: body.movieId ?? null,
+      eventId: body.eventId ?? null,
+      title: (body.showType === "MOVIE" ? movie?.title : event?.name) ?? "Untitled show",
+      venueId: body.venueId ?? 1,
+      venueName: venue?.name ?? "Main Auditorium",
+      showDateTime: body.showDateTime ?? new Date().toISOString(),
+      price: body.price ?? 250,
+      totalSeats: body.totalSeats ?? 100,
+    };
+    mockShows.unshift(created);
+    return HttpResponse.json(created, { status: 201 });
   }),
 
-  http.delete(`${BASE}/api/catalog/shows/:id`, () =>
-    new HttpResponse(null, { status: 204 }),
-  ),
+  http.delete(`${BASE}/api/catalog/shows/:id`, ({ params }) => {
+    const idx = mockShows.findIndex((x) => x.id === Number(params.id));
+    if (idx !== -1) mockShows.splice(idx, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
 
-  http.get(`${BASE}/api/catalog/movies`, () => HttpResponse.json([MOVIE])),
-  http.get(`${BASE}/api/catalog/movies/:id`, () => HttpResponse.json(MOVIE)),
+  http.get(`${BASE}/api/catalog/movies`, () => HttpResponse.json(mockMovies)),
+  http.get(`${BASE}/api/catalog/movies/:id`, ({ params }) => {
+    const m = mockMovies.find((x) => x.id === Number(params.id));
+    if (m) return HttpResponse.json(m);
+    return HttpResponse.json({ message: "Not found" }, { status: 404 });
+  }),
+  http.post(`${BASE}/api/catalog/movies`, async ({ request }) => {
+    const body = (await request.json()) as Partial<import("../types/api").Movie>;
+    const created: import("../types/api").Movie = {
+      id: Date.now(),
+      title: body.title ?? "New Movie",
+      description: body.description ?? "",
+      genre: body.genre ?? "Drama",
+      language: body.language ?? "English",
+      durationMinutes: body.durationMinutes ?? 120,
+      posterUrl: body.posterUrl ?? null,
+      rating: body.rating ?? 8.0,
+    };
+    mockMovies.push(created);
+    return HttpResponse.json(created, { status: 201 });
+  }),
+  http.delete(`${BASE}/api/catalog/movies/:id`, ({ params }) => {
+    const idx = mockMovies.findIndex((x) => x.id === Number(params.id));
+    if (idx !== -1) mockMovies.splice(idx, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
 
-  http.get(`${BASE}/api/catalog/events`, () => HttpResponse.json([EVENT])),
-  http.get(`${BASE}/api/catalog/events/:id`, () => HttpResponse.json(EVENT)),
+  http.get(`${BASE}/api/catalog/events`, () => HttpResponse.json(mockEvents)),
+  http.get(`${BASE}/api/catalog/events/:id`, ({ params }) => {
+    const e = mockEvents.find((x) => x.id === Number(params.id));
+    if (e) return HttpResponse.json(e);
+    return HttpResponse.json({ message: "Not found" }, { status: 404 });
+  }),
+  http.post(`${BASE}/api/catalog/events`, async ({ request }) => {
+    const body = (await request.json()) as Partial<import("../types/api").Event>;
+    const created: import("../types/api").Event = {
+      id: Date.now(),
+      name: body.name ?? "New Event",
+      description: body.description ?? "",
+      category: body.category ?? "Live",
+      bannerUrl: body.bannerUrl ?? null,
+    };
+    mockEvents.push(created);
+    return HttpResponse.json(created, { status: 201 });
+  }),
+  http.delete(`${BASE}/api/catalog/events/:id`, ({ params }) => {
+    const idx = mockEvents.findIndex((x) => x.id === Number(params.id));
+    if (idx !== -1) mockEvents.splice(idx, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
 
-  http.get(`${BASE}/api/catalog/venues`, () => HttpResponse.json([VENUE])),
+  http.get(`${BASE}/api/catalog/venues`, () => HttpResponse.json(mockVenues)),
+  http.post(`${BASE}/api/catalog/venues`, async ({ request }) => {
+    const body = (await request.json()) as Partial<import("../types/api").Venue>;
+    const created: import("../types/api").Venue = {
+      id: Date.now(),
+      name: body.name ?? "New Venue",
+      address: body.address ?? "City Center",
+      city: body.city ?? "Mumbai",
+    };
+    mockVenues.push(created);
+    return HttpResponse.json(created, { status: 201 });
+  }),
 
   // Inventory
   http.get(`${BASE}/api/inventory/shows/:id`, () =>

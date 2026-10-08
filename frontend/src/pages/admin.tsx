@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   BarChart2, Ticket, Film, Plus, Trash2, RefreshCw,
   Users, DollarSign, ChevronRight, X, AlertTriangle, Inbox,
+  MapPin, Sparkles,
 } from "lucide-react";
 import { api } from "../api/eventix";
 import { money, dateOnly } from "../lib/utils";
@@ -14,7 +15,7 @@ import { bookingRef } from "./confirmation";
 import type { ApiError } from "../api/client";
 import type { Show, Movie, Event, Venue, BookingStatus } from "../types/api";
 
-type Tab = "overview" | "shows" | "bookings";
+type Tab = "overview" | "shows" | "movies" | "events" | "venues" | "bookings";
 
 const STATUS_LABELS: Record<string, string> = {
   CONFIRMED: "Confirmed",
@@ -218,6 +219,51 @@ function CreateShowModal({ movies, events, venues, onClose }: {
     price: 250,
   });
 
+  const [showNewMovie, setShowNewMovie] = useState(false);
+  const [newMovie, setNewMovie] = useState({ title: "", genre: "Sci-Fi", language: "English", durationMinutes: 135, rating: 8.5 });
+
+  const [showNewVenue, setShowNewVenue] = useState(false);
+  const [newVenue, setNewVenue] = useState({ name: "", city: "Mumbai", address: "City Center" });
+
+  const [showNewEvent, setShowNewEvent] = useState(false);
+  const [newEvent, setNewEvent] = useState({ name: "", category: "Music", description: "Live performance" });
+
+  const addMovie = useMutation({
+    mutationFn: () => api.createMovie({ ...newMovie, description: "", posterUrl: null }),
+    onSuccess: (created) => {
+      void qc.invalidateQueries({ queryKey: ["movies"] });
+      set("movieId", created.id);
+      setShowNewMovie(false);
+      setNewMovie({ title: "", genre: "Sci-Fi", language: "English", durationMinutes: 135, rating: 8.5 });
+      toast("success", "Movie added", `${created.title} added and selected.`);
+    },
+    onError: (err) => toast("error", "Failed to add movie", (err as ApiError)?.message ?? "Check fields and try again."),
+  });
+
+  const addVenue = useMutation({
+    mutationFn: () => api.createVenue(newVenue),
+    onSuccess: (created) => {
+      void qc.invalidateQueries({ queryKey: ["venues"] });
+      set("venueId", created.id);
+      setShowNewVenue(false);
+      setNewVenue({ name: "", city: "Mumbai", address: "City Center" });
+      toast("success", "Venue added", `${created.name} added and selected.`);
+    },
+    onError: (err) => toast("error", "Failed to add venue", (err as ApiError)?.message ?? "Check fields and try again."),
+  });
+
+  const addEvent = useMutation({
+    mutationFn: () => api.createEvent({ ...newEvent, bannerUrl: null }),
+    onSuccess: (created) => {
+      void qc.invalidateQueries({ queryKey: ["events"] });
+      set("eventId", created.id);
+      setShowNewEvent(false);
+      setNewEvent({ name: "", category: "Music", description: "Live performance" });
+      toast("success", "Event added", `${created.name} added and selected.`);
+    },
+    onError: (err) => toast("error", "Failed to add event", (err as ApiError)?.message ?? "Check fields and try again."),
+  });
+
   const create = useMutation({
     mutationFn: () => api.createShow({
       showType: form.showType as "MOVIE" | "EVENT",
@@ -240,7 +286,7 @@ function CreateShowModal({ movies, events, venues, onClose }: {
   const canSubmit = !!(form.venueId && form.showDateTime && (form.showType === "MOVIE" ? form.movieId : form.eventId));
 
   return (
-    <AdminModal open title="Create a show" onClose={onClose} width={540}>
+    <AdminModal open title="Create a show" onClose={onClose} width={560}>
       <div style={{ display: "flex", flexDirection: "column", gap: "1.125rem" }}>
         <div className="field">
           <label className="field-label" htmlFor="cs-type">Show type</label>
@@ -252,19 +298,144 @@ function CreateShowModal({ movies, events, venues, onClose }: {
 
         {form.showType === "MOVIE" ? (
           <div className="field">
-            <label className="field-label" htmlFor="cs-movie">Movie</label>
-            <select id="cs-movie" className="input" value={form.movieId} onChange={(e) => set("movieId", Number(e.target.value))}>
-              {movies.length === 0 && <option value={0}>No movies available — add one in the catalogue first</option>}
-              {movies.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
-            </select>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+              <label className="field-label" htmlFor="cs-movie" style={{ margin: 0 }}>
+                Movie
+                <span style={{ marginLeft: "0.4rem", fontSize: "0.75rem", color: "var(--ev-text-subtle)", fontWeight: 400 }}>
+                  ({movies.length} available)
+                </span>
+              </label>
+              <button
+                type="button"
+                className="btn btn--ghost btn--xs"
+                onClick={() => setShowNewMovie((v) => !v)}
+                style={{ fontSize: "0.8125rem" }}
+              >
+                {showNewMovie ? "Choose existing" : "+ Add new movie"}
+              </button>
+            </div>
+
+            {showNewMovie ? (
+              <div style={{ padding: "0.875rem", background: "var(--ev-surface-raised, var(--ev-surface))", border: "1px solid var(--ev-border)", borderRadius: "var(--ev-radius-control)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <div style={{ fontSize: "0.8125rem", fontWeight: 600 }}>Create and select new movie</div>
+                <input
+                  className="input"
+                  placeholder="Movie title (e.g. Oppenheimer)"
+                  value={newMovie.title}
+                  onChange={(e) => setNewMovie((m) => ({ ...m, title: e.target.value }))}
+                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                  <input
+                    className="input"
+                    placeholder="Genre (e.g. Sci-Fi)"
+                    value={newMovie.genre}
+                    onChange={(e) => setNewMovie((m) => ({ ...m, genre: e.target.value }))}
+                  />
+                  <input
+                    className="input"
+                    placeholder="Language (e.g. English)"
+                    value={newMovie.language}
+                    onChange={(e) => setNewMovie((m) => ({ ...m, language: e.target.value }))}
+                  />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                  <input
+                    className="input"
+                    type="number"
+                    placeholder="Duration (minutes)"
+                    value={newMovie.durationMinutes}
+                    onChange={(e) => setNewMovie((m) => ({ ...m, durationMinutes: Number(e.target.value) }))}
+                  />
+                  <input
+                    className="input"
+                    type="number"
+                    step="0.1"
+                    placeholder="Rating (e.g. 8.8)"
+                    value={newMovie.rating}
+                    onChange={(e) => setNewMovie((m) => ({ ...m, rating: Number(e.target.value) }))}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className={`btn btn--primary btn--sm${addMovie.isPending ? " btn--loading" : ""}`}
+                  disabled={!newMovie.title.trim() || addMovie.isPending}
+                  onClick={() => addMovie.mutate()}
+                >
+                  {addMovie.isPending ? "" : "Save & select movie"}
+                </button>
+              </div>
+            ) : movies.length > 0 ? (
+              <select id="cs-movie" className="input" value={form.movieId} onChange={(e) => set("movieId", Number(e.target.value))}>
+                {movies.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
+              </select>
+            ) : (
+              <div className="info-banner" style={{ padding: "0.75rem 1rem" }}>
+                <AlertTriangle size={15} style={{ color: "var(--ev-warning)", flexShrink: 0 }} />
+                <span>No movies in catalogue yet — click "+ Add new movie" above to create one.</span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="field">
-            <label className="field-label" htmlFor="cs-event">Event</label>
-            <select id="cs-event" className="input" value={form.eventId} onChange={(e) => set("eventId", Number(e.target.value))}>
-              {events.length === 0 && <option value={0}>No events available — add one in the catalogue first</option>}
-              {events.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
-            </select>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+              <label className="field-label" htmlFor="cs-event" style={{ margin: 0 }}>
+                Event
+                <span style={{ marginLeft: "0.4rem", fontSize: "0.75rem", color: "var(--ev-text-subtle)", fontWeight: 400 }}>
+                  ({events.length} available)
+                </span>
+              </label>
+              <button
+                type="button"
+                className="btn btn--ghost btn--xs"
+                onClick={() => setShowNewEvent((v) => !v)}
+                style={{ fontSize: "0.8125rem" }}
+              >
+                {showNewEvent ? "Choose existing" : "+ Add new event"}
+              </button>
+            </div>
+
+            {showNewEvent ? (
+              <div style={{ padding: "0.875rem", background: "var(--ev-surface-raised, var(--ev-surface))", border: "1px solid var(--ev-border)", borderRadius: "var(--ev-radius-control)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <div style={{ fontSize: "0.8125rem", fontWeight: 600 }}>Create and select new event</div>
+                <input
+                  className="input"
+                  placeholder="Event name (e.g. Coldplay Live)"
+                  value={newEvent.name}
+                  onChange={(e) => setNewEvent((ev) => ({ ...ev, name: e.target.value }))}
+                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                  <input
+                    className="input"
+                    placeholder="Category (e.g. Music, Comedy)"
+                    value={newEvent.category}
+                    onChange={(e) => setNewEvent((ev) => ({ ...ev, category: e.target.value }))}
+                  />
+                  <input
+                    className="input"
+                    placeholder="Description"
+                    value={newEvent.description}
+                    onChange={(e) => setNewEvent((ev) => ({ ...ev, description: e.target.value }))}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className={`btn btn--primary btn--sm${addEvent.isPending ? " btn--loading" : ""}`}
+                  disabled={!newEvent.name.trim() || addEvent.isPending}
+                  onClick={() => addEvent.mutate()}
+                >
+                  {addEvent.isPending ? "" : "Save & select event"}
+                </button>
+              </div>
+            ) : events.length > 0 ? (
+              <select id="cs-event" className="input" value={form.eventId} onChange={(e) => set("eventId", Number(e.target.value))}>
+                {events.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
+            ) : (
+              <div className="info-banner" style={{ padding: "0.75rem 1rem" }}>
+                <AlertTriangle size={15} style={{ color: "var(--ev-warning)", flexShrink: 0 }} />
+                <span>No events in catalogue yet — click "+ Add new event" above to create one.</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -274,8 +445,58 @@ function CreateShowModal({ movies, events, venues, onClose }: {
         </div>
 
         <div className="field">
-          <label className="field-label" htmlFor="cs-venue">Venue</label>
-          {venues.length > 0 ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+            <label className="field-label" htmlFor="cs-venue" style={{ margin: 0 }}>
+              Venue
+              {venues.length > 0 && (
+                <span style={{ marginLeft: "0.4rem", fontSize: "0.75rem", color: "var(--ev-text-subtle)", fontWeight: 400 }}>
+                  ({venues.length} available)
+                </span>
+              )}
+            </label>
+            <button
+              type="button"
+              className="btn btn--ghost btn--xs"
+              onClick={() => setShowNewVenue((v) => !v)}
+              style={{ fontSize: "0.8125rem" }}
+            >
+              {showNewVenue ? "Choose existing" : "+ Add new venue"}
+            </button>
+          </div>
+
+          {showNewVenue ? (
+            <div style={{ padding: "0.875rem", background: "var(--ev-surface-raised, var(--ev-surface))", border: "1px solid var(--ev-border)", borderRadius: "var(--ev-radius-control)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+              <div style={{ fontSize: "0.8125rem", fontWeight: 600 }}>Create and select new venue</div>
+              <input
+                className="input"
+                placeholder="Venue name (e.g. IMAX Cinema)"
+                value={newVenue.name}
+                onChange={(e) => setNewVenue((v) => ({ ...v, name: e.target.value }))}
+              />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                <input
+                  className="input"
+                  placeholder="City (e.g. Mumbai)"
+                  value={newVenue.city}
+                  onChange={(e) => setNewVenue((v) => ({ ...v, city: e.target.value }))}
+                />
+                <input
+                  className="input"
+                  placeholder="Address (e.g. High Street)"
+                  value={newVenue.address}
+                  onChange={(e) => setNewVenue((v) => ({ ...v, address: e.target.value }))}
+                />
+              </div>
+              <button
+                type="button"
+                className={`btn btn--primary btn--sm${addVenue.isPending ? " btn--loading" : ""}`}
+                disabled={!newVenue.name.trim() || addVenue.isPending}
+                onClick={() => addVenue.mutate()}
+              >
+                {addVenue.isPending ? "" : "Save & select venue"}
+              </button>
+            </div>
+          ) : venues.length > 0 ? (
             <select id="cs-venue" className="input" value={form.venueId} onChange={(e) => set("venueId", Number(e.target.value))}>
               {venues.map((v) => <option key={v.id} value={v.id}>{v.name}{v.city ? ` (${v.city})` : ""}</option>)}
             </select>
@@ -310,6 +531,161 @@ function CreateShowModal({ movies, events, venues, onClose }: {
   );
 }
 
+/* ── Create movie modal ────────────────────────────────────────────────── */
+function CreateMovieModal({ onClose }: { onClose: () => void }) {
+  const { show: toast } = useToast();
+  const qc = useQueryClient();
+  const [form, setForm] = useState({
+    title: "",
+    genre: "Drama",
+    language: "English",
+    durationMinutes: 120,
+    rating: 8.0,
+    description: "",
+  });
+
+  const create = useMutation({
+    mutationFn: () => api.createMovie({ ...form, posterUrl: null }),
+    onSuccess: (m) => {
+      void qc.invalidateQueries({ queryKey: ["movies"] });
+      toast("success", "Movie added", `${m.title} is now in the catalogue.`);
+      onClose();
+    },
+    onError: (err) => toast("error", "Creation failed", (err as ApiError)?.message ?? "Please try again."),
+  });
+
+  return (
+    <AdminModal open title="Add movie" onClose={onClose} width={480}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="field">
+          <label className="field-label" htmlFor="cm-title">Title</label>
+          <input id="cm-title" className="input" placeholder="Movie title" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+          <div className="field">
+            <label className="field-label" htmlFor="cm-genre">Genre</label>
+            <input id="cm-genre" className="input" placeholder="e.g. Action" value={form.genre} onChange={(e) => setForm((f) => ({ ...f, genre: e.target.value }))} />
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="cm-lang">Language</label>
+            <input id="cm-lang" className="input" placeholder="e.g. English" value={form.language} onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))} />
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+          <div className="field">
+            <label className="field-label" htmlFor="cm-dur">Duration (min)</label>
+            <input id="cm-dur" type="number" min={1} className="input" value={form.durationMinutes} onChange={(e) => setForm((f) => ({ ...f, durationMinutes: Number(e.target.value) }))} />
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="cm-rate">Rating (0 - 10)</label>
+            <input id="cm-rate" type="number" step="0.1" min={0} max={10} className="input" value={form.rating} onChange={(e) => setForm((f) => ({ ...f, rating: Number(e.target.value) }))} />
+          </div>
+        </div>
+      </div>
+      <div className="modal__footer" style={{ marginTop: "1.5rem" }}>
+        <button className="btn btn--secondary" onClick={onClose}>Cancel</button>
+        <button className={`btn btn--primary btn-shine${create.isPending ? " btn--loading" : ""}`} disabled={!form.title.trim() || create.isPending} onClick={() => create.mutate()}>
+          {create.isPending ? "" : "Add movie"}
+        </button>
+      </div>
+    </AdminModal>
+  );
+}
+
+/* ── Create event modal ────────────────────────────────────────────────── */
+function CreateEventModal({ onClose }: { onClose: () => void }) {
+  const { show: toast } = useToast();
+  const qc = useQueryClient();
+  const [form, setForm] = useState({
+    name: "",
+    category: "Music",
+    description: "",
+  });
+
+  const create = useMutation({
+    mutationFn: () => api.createEvent({ ...form, bannerUrl: null }),
+    onSuccess: (e) => {
+      void qc.invalidateQueries({ queryKey: ["events"] });
+      toast("success", "Event added", `${e.name} is now in the catalogue.`);
+      onClose();
+    },
+    onError: (err) => toast("error", "Creation failed", (err as ApiError)?.message ?? "Please try again."),
+  });
+
+  return (
+    <AdminModal open title="Add event" onClose={onClose} width={480}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="field">
+          <label className="field-label" htmlFor="ce-name">Event name</label>
+          <input id="ce-name" className="input" placeholder="e.g. Coldplay Live" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+        </div>
+        <div className="field">
+          <label className="field-label" htmlFor="ce-cat">Category</label>
+          <input id="ce-cat" className="input" placeholder="e.g. Music, Comedy" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} />
+        </div>
+        <div className="field">
+          <label className="field-label" htmlFor="ce-desc">Description</label>
+          <input id="ce-desc" className="input" placeholder="Short description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+        </div>
+      </div>
+      <div className="modal__footer" style={{ marginTop: "1.5rem" }}>
+        <button className="btn btn--secondary" onClick={onClose}>Cancel</button>
+        <button className={`btn btn--primary btn-shine${create.isPending ? " btn--loading" : ""}`} disabled={!form.name.trim() || create.isPending} onClick={() => create.mutate()}>
+          {create.isPending ? "" : "Add event"}
+        </button>
+      </div>
+    </AdminModal>
+  );
+}
+
+/* ── Create venue modal ────────────────────────────────────────────────── */
+function CreateVenueModal({ onClose }: { onClose: () => void }) {
+  const { show: toast } = useToast();
+  const qc = useQueryClient();
+  const [form, setForm] = useState({
+    name: "",
+    city: "Mumbai",
+    address: "",
+  });
+
+  const create = useMutation({
+    mutationFn: () => api.createVenue(form),
+    onSuccess: (v) => {
+      void qc.invalidateQueries({ queryKey: ["venues"] });
+      toast("success", "Venue added", `${v.name} is now in the catalogue.`);
+      onClose();
+    },
+    onError: (err) => toast("error", "Creation failed", (err as ApiError)?.message ?? "Please try again."),
+  });
+
+  return (
+    <AdminModal open title="Add venue" onClose={onClose} width={480}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="field">
+          <label className="field-label" htmlFor="cv-name">Venue name</label>
+          <input id="cv-name" className="input" placeholder="e.g. IMAX Mumbai" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+          <div className="field">
+            <label className="field-label" htmlFor="cv-city">City</label>
+            <input id="cv-city" className="input" placeholder="City" value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} />
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="cv-addr">Address</label>
+            <input id="cv-addr" className="input" placeholder="Address / Location" value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} />
+          </div>
+        </div>
+      </div>
+      <div className="modal__footer" style={{ marginTop: "1.5rem" }}>
+        <button className="btn btn--secondary" onClick={onClose}>Cancel</button>
+        <button className={`btn btn--primary btn-shine${create.isPending ? " btn--loading" : ""}`} disabled={!form.name.trim() || create.isPending} onClick={() => create.mutate()}>
+          {create.isPending ? "" : "Add venue"}
+        </button>
+      </div>
+    </AdminModal>
+  );
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    ADMIN
    ══════════════════════════════════════════════════════════════════════════ */
@@ -319,12 +695,15 @@ export function AdminPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("overview");
   const [createOpen, setCreateOpen] = useState(false);
+  const [createMovieOpen, setCreateMovieOpen] = useState(false);
+  const [createEventOpen, setCreateEventOpen] = useState(false);
+  const [createVenueOpen, setCreateVenueOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Show | null>(null);
 
   const { data: shows = [], isLoading: showsLoading, isError: showsError, refetch: refetchShows } = useQuery({ queryKey: ["shows"], queryFn: api.shows });
-  const { data: movies = [] } = useQuery({ queryKey: ["movies"], queryFn: api.movies });
-  const { data: events = [] } = useQuery({ queryKey: ["events"], queryFn: api.events });
-  const { data: venues = [] } = useQuery({ queryKey: ["venues"], queryFn: api.venues });
+  const { data: movies = [], refetch: refetchMovies } = useQuery({ queryKey: ["movies"], queryFn: api.movies });
+  const { data: events = [], refetch: refetchEvents } = useQuery({ queryKey: ["events"], queryFn: api.events });
+  const { data: venues = [], refetch: refetchVenues } = useQuery({ queryKey: ["venues"], queryFn: api.venues });
 
   /* Audit note: the backend has no admin-wide bookings endpoint yet — this
      query returns YOUR OWN bookings. It degrades gracefully below. */
@@ -342,14 +721,28 @@ export function AdminPage() {
       setDeleteTarget(null);
     },
     onError: (err) => {
-      /* Real backends without a DELETE route answer 403/405 — say exactly that. */
       const apiErr = err as ApiError;
-      const hint = apiErr?.status === 405 || apiErr?.status === 403
-        ? "The catalogue service doesn't expose show deletion yet — remove it at the database or add the endpoint."
-        : (apiErr?.message ?? "Unable to delete this show.");
-      toast("error", "Delete unavailable", hint);
+      toast("error", "Delete failed", apiErr?.message ?? "Unable to delete this show.");
       setDeleteTarget(null);
     },
+  });
+
+  const deleteMovie = useMutation({
+    mutationFn: (id: number) => api.deleteMovie(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["movies"] });
+      toast("success", "Movie deleted", "Movie removed from catalogue.");
+    },
+    onError: (err) => toast("error", "Failed to delete movie", (err as ApiError)?.message ?? "Cannot delete movie."),
+  });
+
+  const deleteEvent = useMutation({
+    mutationFn: (id: number) => api.deleteEvent(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["events"] });
+      toast("success", "Event deleted", "Event removed from catalogue.");
+    },
+    onError: (err) => toast("error", "Failed to delete event", (err as ApiError)?.message ?? "Cannot delete event."),
   });
 
   const confirmed = bookings.filter((b) => b.status === "CONFIRMED");
@@ -361,6 +754,9 @@ export function AdminPage() {
   const navItems: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "overview", label: "Overview", icon: <BarChart2 size={17} /> },
     { key: "shows", label: "Shows", icon: <Ticket size={17} /> },
+    { key: "movies", label: "Movies", icon: <Film size={17} /> },
+    { key: "events", label: "Events", icon: <Sparkles size={17} /> },
+    { key: "venues", label: "Venues", icon: <MapPin size={17} /> },
     { key: "bookings", label: "Bookings", icon: <Users size={17} /> },
   ];
 
@@ -492,6 +888,191 @@ export function AdminPage() {
           </motion.div>
         )}
 
+        {/* ─── MOVIES ─── */}
+        {tab === "movies" && (
+          <motion.div key="movies" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.75rem", flexWrap: "wrap", gap: "1rem" }}>
+              <div>
+                <h1 className="font-display" style={{ fontSize: "2rem" }}>Movies</h1>
+                <p className="text-muted" style={{ fontSize: "0.9rem", marginTop: "0.25rem" }}>{movies.length} title{movies.length !== 1 ? "s" : ""} in catalogue</p>
+              </div>
+              <div style={{ display: "flex", gap: "0.625rem" }}>
+                <button className="btn btn--secondary btn--sm" onClick={() => void refetchMovies()}>
+                  <RefreshCw size={14} aria-hidden="true" /> Refresh
+                </button>
+                <button className="btn btn--primary btn--sm btn-shine" onClick={() => setCreateMovieOpen(true)}>
+                  <Plus size={14} aria-hidden="true" /> New movie
+                </button>
+              </div>
+            </div>
+
+            {movies.length === 0 ? (
+              <div className="empty-state">
+                <Film className="empty-state__icon" />
+                <div className="empty-state__title">No movies in catalogue</div>
+                <button className="btn btn--primary" onClick={() => setCreateMovieOpen(true)}>
+                  <Plus size={16} /> Add movie
+                </button>
+              </div>
+            ) : (
+              <div className="data-table-wrap">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Genre</th>
+                      <th>Language</th>
+                      <th>Duration</th>
+                      <th>Rating</th>
+                      <th style={{ textAlign: "right" }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movies.map((m) => (
+                      <tr key={m.id}>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{m.title}</div>
+                        </td>
+                        <td><span className="badge badge--accent">{m.genre || "Drama"}</span></td>
+                        <td>{m.language || "English"}</td>
+                        <td style={{ fontVariantNumeric: "tabular-nums" }}>{m.durationMinutes} mins</td>
+                        <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "var(--ev-gold)" }}>★ {m.rating ?? "—"}</td>
+                        <td>
+                          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                            <button
+                              className="btn btn--ghost btn--icon btn--sm"
+                              onClick={() => deleteMovie.mutate(m.id)}
+                              title={`Delete ${m.title}`}
+                              style={{ color: "var(--ev-danger)" }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ─── EVENTS ─── */}
+        {tab === "events" && (
+          <motion.div key="events" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.75rem", flexWrap: "wrap", gap: "1rem" }}>
+              <div>
+                <h1 className="font-display" style={{ fontSize: "2rem" }}>Events</h1>
+                <p className="text-muted" style={{ fontSize: "0.9rem", marginTop: "0.25rem" }}>{events.length} event{events.length !== 1 ? "s" : ""} in catalogue</p>
+              </div>
+              <div style={{ display: "flex", gap: "0.625rem" }}>
+                <button className="btn btn--secondary btn--sm" onClick={() => void refetchEvents()}>
+                  <RefreshCw size={14} aria-hidden="true" /> Refresh
+                </button>
+                <button className="btn btn--primary btn--sm btn-shine" onClick={() => setCreateEventOpen(true)}>
+                  <Plus size={14} aria-hidden="true" /> New event
+                </button>
+              </div>
+            </div>
+
+            {events.length === 0 ? (
+              <div className="empty-state">
+                <Sparkles className="empty-state__icon" />
+                <div className="empty-state__title">No events in catalogue</div>
+                <button className="btn btn--primary" onClick={() => setCreateEventOpen(true)}>
+                  <Plus size={16} /> Add event
+                </button>
+              </div>
+            ) : (
+              <div className="data-table-wrap">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Category</th>
+                      <th>Description</th>
+                      <th style={{ textAlign: "right" }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {events.map((e) => (
+                      <tr key={e.id}>
+                        <td style={{ fontWeight: 600 }}>{e.name}</td>
+                        <td><span className="badge badge--pink">{e.category || "Live"}</span></td>
+                        <td style={{ fontSize: "0.875rem", color: "var(--ev-text-muted)" }}>{e.description || "—"}</td>
+                        <td>
+                          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                            <button
+                              className="btn btn--ghost btn--icon btn--sm"
+                              onClick={() => deleteEvent.mutate(e.id)}
+                              title={`Delete ${e.name}`}
+                              style={{ color: "var(--ev-danger)" }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ─── VENUES ─── */}
+        {tab === "venues" && (
+          <motion.div key="venues" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.75rem", flexWrap: "wrap", gap: "1rem" }}>
+              <div>
+                <h1 className="font-display" style={{ fontSize: "2rem" }}>Venues</h1>
+                <p className="text-muted" style={{ fontSize: "0.9rem", marginTop: "0.25rem" }}>{venues.length} venue{venues.length !== 1 ? "s" : ""} in catalogue</p>
+              </div>
+              <div style={{ display: "flex", gap: "0.625rem" }}>
+                <button className="btn btn--secondary btn--sm" onClick={() => void refetchVenues()}>
+                  <RefreshCw size={14} aria-hidden="true" /> Refresh
+                </button>
+                <button className="btn btn--primary btn--sm btn-shine" onClick={() => setCreateVenueOpen(true)}>
+                  <Plus size={14} aria-hidden="true" /> New venue
+                </button>
+              </div>
+            </div>
+
+            {venues.length === 0 ? (
+              <div className="empty-state">
+                <MapPin className="empty-state__icon" />
+                <div className="empty-state__title">No venues in catalogue</div>
+                <button className="btn btn--primary" onClick={() => setCreateVenueOpen(true)}>
+                  <Plus size={16} /> Add venue
+                </button>
+              </div>
+            ) : (
+              <div className="data-table-wrap">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>City</th>
+                      <th>Address</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {venues.map((v) => (
+                      <tr key={v.id}>
+                        <td style={{ fontWeight: 600 }}>{v.name}</td>
+                        <td><span className="badge badge--neutral">{v.city || "—"}</span></td>
+                        <td style={{ fontSize: "0.875rem", color: "var(--ev-text-muted)" }}>{v.address || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* ─── BOOKINGS ─── */}
         {tab === "bookings" && (
           <motion.div key="bookings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -529,6 +1110,18 @@ export function AdminPage() {
           venues={venues}
           onClose={() => setCreateOpen(false)}
         />
+      )}
+
+      {createMovieOpen && (
+        <CreateMovieModal onClose={() => setCreateMovieOpen(false)} />
+      )}
+
+      {createEventOpen && (
+        <CreateEventModal onClose={() => setCreateEventOpen(false)} />
+      )}
+
+      {createVenueOpen && (
+        <CreateVenueModal onClose={() => setCreateVenueOpen(false)} />
       )}
 
       {/* Delete confirm — styled, focus-trapped, Escape-aware */}
