@@ -105,7 +105,7 @@ export function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.95 }}
           >
-            Premières, gigs and once-in-a-while lineups — pick your show,
+            Premières, gigs and once-in-a-while lineups  pick your show,
             choose your seats, and walk in with everything on your phone.
           </motion.p>
 
@@ -309,26 +309,26 @@ export function HomePage() {
           <Stagger style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(230px, 100%), 1fr))", gap: "1rem" }}>
             {[
               {
-                name: "Movies", to: "/shows?type=MOVIE", seed: 0, icon: <Film size={20} aria-hidden="true" />,
+                name: "Movies", to: "/shows?type=MOVIE", seed: 0, image: "/category-art/movies.png", icon: <Film size={20} aria-hidden="true" />,
                 count: upcomingShows.filter((s) => s.showType === "MOVIE").length,
               },
               {
-                name: "Live events", to: "/shows?type=EVENT", seed: 2, icon: <Ticket size={20} aria-hidden="true" />,
+                name: "Live events", to: "/shows?type=EVENT", seed: 2, image: "/category-art/live-events.png", icon: <Ticket size={20} aria-hidden="true" />,
                 count: upcomingShows.filter((s) => s.showType === "EVENT").length,
               },
               {
-                name: "Everything", to: "/shows", seed: 5, icon: <ArrowUpRight size={20} aria-hidden="true" />,
+                name: "Everything", to: "/shows", seed: 5, image: "/category-art/everything.png", icon: <ArrowUpRight size={20} aria-hidden="true" />,
                 count: upcomingShows.length,
               },
               {
-                name: "How it works", to: "/#how-it-works", seed: 1, icon: <Sparkles size={20} aria-hidden="true" />,
+                name: "How it works", to: "/#how-it-works", seed: 1, image: "/category-art/how-it-works.png", icon: <Sparkles size={20} aria-hidden="true" />,
               },
-            ].map(({ name, to, seed, icon, count }) => (
+            ].map(({ name, to, seed, image, icon, count }) => (
               <StaggerItem key={name}>
                 <Tilt max={8}>
                   <Link to={to} className="cat-tile">
                     <div className="cat-tile__bg" style={{ background: posterFallback(seed) }}>
-                      {null /* gradient fallback */}
+                      <img src={image} alt="" loading="lazy" />
                     </div>
                     <div className="cat-tile__overlay" />
                     <span className="cat-tile__arrow">{icon}</span>
@@ -359,7 +359,7 @@ export function HomePage() {
             {[
               { n: "01", title: "Find the one", desc: "Search by title or venue, filter by film or live event, sort by what matters — date, price, or your own alphabet." },
               { n: "02", title: "Claim your seats", desc: "Live availability, honest seat maps, and a running total before you commit to anything." },
-              { n: "03", title: "Pay in seconds", desc: "One focused checkout. No accounts maze, no surprise fees — the price you see is the price you pay." },
+              { n: "03", title: "Pay in seconds", desc: "One focused checkout. No accounts maze, no surprise fees  the price you see is the price you pay." },
               { n: "04", title: "Walk straight in", desc: "Your ticket and calendar invite land instantly. Cancel with a tap if plans change." },
             ].map(({ n, title, desc }, i) => (
               <Reveal key={n} delay={i * 0.06}>
@@ -440,7 +440,7 @@ export function HomePage() {
           <Stagger style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: "2rem" }}>
             {[
               { icon: <Ticket size={20} />, title: "Instant confirmation", desc: "The moment your payment lands, the seat is yours. No pending purgatory." },
-              { icon: <ShieldCheck size={20} />, title: "Sandboxed payments", desc: "Every transaction runs through a simulated gateway in this demo — safe to try, safe to break." },
+              { icon: <ShieldCheck size={20} />, title: "Sandboxed payments", desc: "Every transaction runs through a simulated gateway in this demo  safe to try, safe to break." },
               { icon: <RefreshCw size={20} />, title: "Cancel without a call", desc: "Plans change. Cancel confirmed bookings yourself, right from your account." },
               { icon: <Sparkles size={20} />, title: "Your ticket, forever findable", desc: "Reference numbers, calendar files and ticket exports, one tap away." },
             ].map(({ icon, title, desc }) => (

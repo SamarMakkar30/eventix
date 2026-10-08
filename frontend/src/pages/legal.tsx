@@ -101,7 +101,7 @@ export function PrivacyPage() {
         {
           heading: "Security",
           body: [
-            "Passwords are hashed, traffic between your browser and our services should always use HTTPS, and access tokens expire automatically. No system is perfect — if you believe your account was compromised, contact us immediately.",
+            "Passwords are hashed, traffic between your browser and our services should always use HTTPS, and access tokens expire automatically. No system is perfect if you believe your account was compromised, contact us immediately.",
           ],
         },
       ]}
@@ -129,7 +129,7 @@ export function TermsPage() {
         {
           heading: "Bookings & tickets",
           body: [
-            "A booking is confirmed only when the platform shows a confirmed status with a booking reference. Seats are limited and held briefly during checkout — completing payment late can mean losing them.",
+            "A booking is confirmed only when the platform shows a confirmed status with a booking reference. Seats are limited and held briefly during checkout completing payment late can mean losing them.",
             "Tickets are personal and non-transferable unless stated otherwise. Your booking reference and a valid ID may be requested at the venue.",
           ],
         },
@@ -164,12 +164,12 @@ export function RefundsPage() {
       metaDesc="How to cancel an Eventix booking and how refunds work."
       title="Refunds & Cancellations"
       updated={UPDATED}
-      intro="Plans change. Here's exactly how cancellations and refunds work — no fine print games."
+      intro="Plans change. Here's exactly how cancellations and refunds work no fine print games."
       sections={[
         {
           heading: "Cancelling a booking",
           body: [
-            "Open My Bookings, choose the booking, and press Cancel. Confirmed bookings for upcoming shows can be cancelled by you directly — no calls, no forms.",
+            "Open My Bookings, choose the booking, and press Cancel. Confirmed bookings for upcoming shows can be cancelled by you directly no calls, no forms.",
             "Once cancelled, the seats are released immediately and the booking moves to a Cancelled state. Cancellation can't be undone, but you can always book again if seats remain.",
           ],
         },

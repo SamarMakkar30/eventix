@@ -350,7 +350,7 @@ export function Layout() {
               <span className="brand-v2__name">Eventix</span>
             </Link>
             <p style={{ color: "var(--ev-text-muted)", fontSize: "0.9375rem", lineHeight: 1.7, maxWidth: "30ch" }}>
-              Cinema and live experiences, beautifully booked. Premières, concerts and one-night-only lineups — reserved in seconds.
+              Cinema and live experiences, beautifully booked. Premières, concerts and one-night-only lineups  reserved in seconds.
             </p>
           </div>
           <div>

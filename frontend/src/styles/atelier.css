@@ -622,7 +622,7 @@
 .cat-tile {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 4/5;
+  aspect-ratio: 2/3;
   border-radius: var(--ev-radius-card);
   text-decoration: none;
   color: var(--ev-hero-ink);
@@ -634,8 +634,8 @@
 }
 .cat-tile:hover { border-color: color-mix(in srgb, var(--ev-gold) 45%, var(--ev-border)); box-shadow: var(--ev-shadow-elevated); }
 .cat-tile__bg, .cat-tile__bg img, .cat-tile__fallback { position: absolute; inset: 0; width: 100%; height: 100%; }
-.cat-tile__bg img, .cat-tile__fallback { object-fit: cover; transition: transform 0.8s var(--ev-ease-emphasized); }
-.cat-tile:hover .cat-tile__bg img, .cat-tile:hover .cat-tile__fallback { transform: scale(1.07); }
+.cat-tile__bg img, .cat-tile__fallback { object-fit: cover; object-position: center; transition: transform 0.8s var(--ev-ease-emphasized); }
+.cat-tile:hover .cat-tile__bg img, .cat-tile:hover .cat-tile__fallback { transform: scale(1.02); }
 .cat-tile__overlay {
   position: absolute;
   inset: 0;

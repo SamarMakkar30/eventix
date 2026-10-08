@@ -11,11 +11,11 @@ import { Reveal } from "../components/motion-kit";
 const FAQS: Array<{ q: string; a: string }> = [
   {
     q: "How do I book tickets?",
-    a: "Browse the catalogue, open a show, and pick your seats directly on the seat map — click a seat to add it, click again to release it. Continue to checkout, confirm payment, and your ticket (with an EVX reference) is yours instantly.",
+    a: "Browse the catalogue, open a show, and pick your seats directly on the seat map click a seat to add it, click again to release it. Continue to checkout, confirm payment, and your ticket (with an EVX reference) is yours instantly.",
   },
   {
     q: "Are payments real?",
-    a: "No. This deployment runs a sandboxed payment gateway — nothing is ever charged. You can even simulate a payment failure from the checkout screen to see how we handle it.",
+    a: "No. This deployment runs a sandboxed payment gateway nothing is ever charged. You can even simulate a payment failure from the checkout screen to see how we handle it.",
   },
   {
     q: "Can I cancel a booking?",
@@ -31,7 +31,7 @@ const FAQS: Array<{ q: string; a: string }> = [
   },
   {
     q: "Do you charge convenience fees?",
-    a: "No. The price you see on a show is the price you pay — our order summary shows the convenience fee as Free, always.",
+    a: "No. The price you see on a show is the price you pay our order summary shows the convenience fee as Free, always.",
   },
   {
     q: "What if a show sells out?",
@@ -39,7 +39,7 @@ const FAQS: Array<{ q: string; a: string }> = [
   },
   {
     q: "How do I contact support?",
-    a: "Email support@eventix.app — we reply within a few working days. For account-deletion requests, email from your registered address.",
+    a: "Email: support@eventix.app  We reply within a few working days. For account-deletion requests, email from your registered address.",
   },
 ];
 
@@ -146,7 +146,7 @@ export function AboutPage() {
         <Reveal delay={0.05}>
           <p style={{ color: "var(--ev-text-muted)", lineHeight: 1.85, fontSize: "1.0625rem", marginBottom: "1.5rem" }}>
             Eventix started with a simple irritation: buying a ticket should feel like the start
-            of a great night, not a form submission. So we built the box office we wanted to use —
+            of a great night, not a form submission. So we built the box office we wanted to use 
             an editorial marquee instead of a grid of ads, a seat map you actually pick from,
             and a checkout with no surprise fees.
           </p>
@@ -154,10 +154,10 @@ export function AboutPage() {
         <Reveal delay={0.1}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "1rem", margin: "2rem 0" }}>
             {[
-              { n: "01", t: "Honest inventory", d: "Availability you see is availability that exists — live-updating, never oversold." },
+              { n: "01", t: "Honest inventory", d: "Availability you see is availability that exists live-updating, never oversold." },
               { n: "02", t: "Seats, not slots", d: "You choose where you sit. The map is yours; the math is ours." },
               { n: "03", t: "Zero fee theatre", d: "The price on the poster is the price at checkout. Convenience fee: free, forever." },
-              { n: "04", t: "Cancel like an adult", d: "Plans change. One tap releases your seats — no phone calls, no guilt trips." },
+              { n: "04", t: "Cancel like an adult", d: "Plans change. One tap releases your seats no phone calls, no guilt trips." },
             ].map(({ n, t, d }) => (
               <div key={n} className="card" style={{ padding: "1.25rem" }}>
                 <div className="mono-ref" style={{ color: "var(--ev-gold)", marginBottom: "0.5rem" }}>{n}</div>
@@ -171,7 +171,7 @@ export function AboutPage() {
           <p style={{ color: "var(--ev-text-muted)", lineHeight: 1.85, marginBottom: "2rem" }}>
             Under the marquee: a microservices backend (auth, catalogue, inventory, bookings,
             payments, notifications) behind an API gateway, and a motion-first React frontend
-            designed around a three-voice type system — a serif for the cinema, a grotesque for
+            designed around a three-voice type system a serif for the cinema, a grotesque for
             the interface, a mono for the ticket stub.
           </p>
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
