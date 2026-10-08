@@ -70,7 +70,7 @@ export function ShowDetailPage() {
 
   const movie = show.showType === "MOVIE" ? movies.find((m) => m.id === show.movieId) : null;
   const event = show.showType === "EVENT" ? events.find((e) => e.id === show.eventId) : null;
-  const bannerUrl = movie?.posterUrl ?? event?.bannerUrl ?? null;
+  const bannerUrl = show.thumbnailUrl ?? movie?.posterUrl ?? event?.bannerUrl ?? null;
   const available = inventory?.availableSeats;
   const isPast = new Date(show.showDateTime) < new Date();
   const isSoldOut = available !== undefined && available === 0;

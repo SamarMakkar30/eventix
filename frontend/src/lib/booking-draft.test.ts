@@ -12,6 +12,7 @@ const mockDraft: BookingDraft = {
     showType: "MOVIE",
     movieId: 1,
     eventId: null,
+    thumbnailUrl: null,
     title: "Oppenheimer",
     venueId: 5,
     venueName: "PVR Directors Cut",

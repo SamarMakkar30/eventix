@@ -19,6 +19,7 @@ export interface Show {
   showType: ShowType;
   movieId: number | null;
   eventId: number | null;
+  thumbnailUrl: string | null;
   title: string;
   venueId: number;
   venueName: string;

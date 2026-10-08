@@ -14,6 +14,7 @@ public class ShowResponse {
     private ShowType showType;
     private Long movieId;
     private Long eventId;
+    private String thumbnailUrl;
     private String title;       // resolved movie title or event name, for display
     private Long venueId;
     private String venueName;   // resolved, for display

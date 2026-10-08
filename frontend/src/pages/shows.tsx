@@ -75,7 +75,7 @@ export function ShowsPage() {
     isLoading: showsLoading,
     isError: showsError,
     refetch,
-  } = useQuery({ queryKey: ["shows"], queryFn: api.shows });
+  } = useQuery({ queryKey: ["shows"], queryFn: api.shows, staleTime: 0, refetchInterval: 15_000, refetchOnWindowFocus: true });
   const { data: movies = [] } = useQuery({ queryKey: ["movies"], queryFn: api.movies });
   const { data: events = [] } = useQuery({ queryKey: ["events"], queryFn: api.events });
 

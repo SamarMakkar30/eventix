@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,6 +23,11 @@ public class ShowController {
     public ResponseEntity<ShowResponse> create(@Valid @RequestBody ShowRequest request,
                                                 @RequestHeader(value = "Authorization", required = false) String authorization) {
         return ResponseEntity.status(HttpStatus.CREATED).body(showService.create(request, authorization));
+    }
+
+    @PostMapping("/{id}/thumbnail")
+    public ResponseEntity<ShowResponse> uploadThumbnail(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(showService.updateThumbnail(id, file));
     }
 
     @GetMapping({"", "/"})

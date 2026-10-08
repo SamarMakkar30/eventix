@@ -22,6 +22,8 @@ public class ShowRequest {
     private Long movieId;
     private Long eventId;
 
+    private String thumbnailUrl;
+
     @NotNull(message = "venueId is required")
     private Long venueId;
 

@@ -5,7 +5,7 @@ import type { BookingDraft } from "@/types/api";
 const KEY = "eventix_booking_draft";
 const DRAFT_TTL_MS = 2 * 60 * 60 * 1000;
 const draftSchema = z.object({
-  show: z.object({ id: z.number(), showType: z.enum(["MOVIE", "EVENT"]), movieId: z.number().nullable(), eventId: z.number().nullable(), title: z.string(), venueId: z.number(), venueName: z.string(), showDateTime: z.string(), price: z.number(), totalSeats: z.number() }),
+  show: z.object({ id: z.number(), showType: z.enum(["MOVIE", "EVENT"]), movieId: z.number().nullable(), eventId: z.number().nullable(), thumbnailUrl: z.string().nullable(), title: z.string(), venueId: z.number(), venueName: z.string(), showDateTime: z.string(), price: z.number(), totalSeats: z.number() }),
   quantity: z.number().int().min(1).max(10),
   availableSeats: z.number().int().nonnegative(),
   /** Seat labels the customer picked, e.g. ["A5","A6"] — cosmetic until the

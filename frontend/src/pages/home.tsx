@@ -21,9 +21,9 @@ const SmartImage = lazy(() => import("../components/smart-image"));
 import { PosterRing } from "../components/poster-ring";
 
 const posterFor = (show: Show, movies: Movie[], events: Event[]) =>
-  show.showType === "MOVIE"
+  show.thumbnailUrl ?? (show.showType === "MOVIE"
     ? movies.find((m) => m.id === show.movieId)?.posterUrl ?? null
-    : events.find((e) => e.id === show.eventId)?.bannerUrl ?? null;
+    : events.find((e) => e.id === show.eventId)?.bannerUrl ?? null);
 
 /* ══════════════════════════════════════════════════════════════════════════
    HOME — cinematic editorial landing
@@ -36,7 +36,7 @@ export function HomePage() {
     isError: showsError,
     refetch,
     dataUpdatedAt,
-  } = useQuery({ queryKey: ["shows"], queryFn: api.shows });
+  } = useQuery({ queryKey: ["shows"], queryFn: api.shows, staleTime: 0, refetchInterval: 15_000, refetchOnWindowFocus: true });
   const { data: movies = [] } = useQuery({ queryKey: ["movies"], queryFn: api.movies });
   const { data: events = [] } = useQuery({ queryKey: ["events"], queryFn: api.events });
 

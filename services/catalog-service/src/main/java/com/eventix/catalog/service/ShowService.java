@@ -13,6 +13,7 @@ import com.eventix.catalog.model.Venue;
 import com.eventix.catalog.repository.ShowRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class ShowService {
     private final EventService eventService;
     private final VenueService venueService;
     private final InventoryClient inventoryClient;
+    private final S3UploadService s3UploadService;
 
     public ShowResponse create(ShowRequest request, String authorizationHeader) {
         validateExactlyOneTarget(request);
@@ -46,6 +48,7 @@ public class ShowService {
                 .showType(request.getShowType())
                 .movieId(request.getMovieId())
                 .eventId(request.getEventId())
+                .thumbnailUrl(request.getThumbnailUrl())
                 .venueId(request.getVenueId())
                 .showDateTime(request.getShowDateTime())
                 .price(request.getPrice())
@@ -69,6 +72,12 @@ public class ShowService {
     public ShowResponse findById(Long id) {
         Show show = getOrThrow(id);
         return enrich(show);
+    }
+
+    public ShowResponse updateThumbnail(Long id, MultipartFile file) {
+        Show show = getOrThrow(id);
+        show.setThumbnailUrl(s3UploadService.upload("thumbnails", file));
+        return enrich(showRepository.save(show));
     }
 
     Show getOrThrow(Long id) {
@@ -107,7 +116,7 @@ public class ShowService {
     }
 
     private ShowResponse toResponse(Show s, String title, String venueName) {
-        return new ShowResponse(s.getId(), s.getShowType(), s.getMovieId(), s.getEventId(),
+        return new ShowResponse(s.getId(), s.getShowType(), s.getMovieId(), s.getEventId(), s.getThumbnailUrl(),
                 title, s.getVenueId(), venueName, s.getShowDateTime(), s.getPrice(), s.getTotalSeats());
     }
 }

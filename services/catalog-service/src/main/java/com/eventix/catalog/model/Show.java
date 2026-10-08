@@ -33,6 +33,9 @@ public class Show {
     @Column(name = "event_id")
     private Long eventId;
 
+    @Column(name = "thumbnail_url", length = 1000)
+    private String thumbnailUrl;
+
     @Column(name = "venue_id", nullable = false)
     private Long venueId;
 

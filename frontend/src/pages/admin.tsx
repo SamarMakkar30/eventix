@@ -81,7 +81,15 @@ function AdminModal({
           >
             <div className="modal__header">
               <div className="modal__title font-display" style={{ fontSize: "1.375rem" }}>{title}</div>
-              <button className="modal__close" onClick={onClose} aria-label="Close dialog">
+              <button
+                type="button"
+                className="modal__close"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onClose();
+                }}
+                aria-label="Close dialog"
+              >
                 <X size={18} aria-hidden="true" />
               </button>
             </div>
@@ -129,7 +137,12 @@ function ShowRow({ show, onDelete }: { show: Show; onDelete: (show: Show) => voi
   return (
     <tr>
       <td>
-        <div style={{ fontWeight: 600 }}>{show.title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+          {show.thumbnailUrl && (
+            <img src={show.thumbnailUrl} alt="" style={{ width: 36, height: 48, objectFit: "cover", borderRadius: "var(--ev-radius-control)", background: "var(--ev-surface-raised)" }} />
+          )}
+          <div style={{ fontWeight: 600 }}>{show.title}</div>
+        </div>
         <div className="text-muted" style={{ fontSize: "0.8125rem" }}>{show.venueName}</div>
       </td>
       <td>
@@ -209,10 +222,12 @@ function CreateShowModal({ movies, events, venues, onClose }: {
 }) {
   const { show: toast } = useToast();
   const qc = useQueryClient();
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     showType: "MOVIE",
     movieId: movies[0]?.id ?? 0,
     eventId: events[0]?.id ?? 0,
+    thumbnailUrl: "",
     venueId: venues[0]?.id ?? 1,
     showDateTime: "",
     totalSeats: 100,
@@ -265,15 +280,19 @@ function CreateShowModal({ movies, events, venues, onClose }: {
   });
 
   const create = useMutation({
-    mutationFn: () => api.createShow({
-      showType: form.showType as "MOVIE" | "EVENT",
-      movieId: form.showType === "MOVIE" ? form.movieId : null,
-      eventId: form.showType === "EVENT" ? form.eventId : null,
-      venueId: Number(form.venueId),
-      showDateTime: new Date(form.showDateTime).toISOString(),
-      totalSeats: Number(form.totalSeats),
-      price: Number(form.price),
-    }),
+    mutationFn: async () => {
+      const created = await api.createShow({
+        showType: form.showType as "MOVIE" | "EVENT",
+        movieId: form.showType === "MOVIE" ? form.movieId : null,
+        eventId: form.showType === "EVENT" ? form.eventId : null,
+        thumbnailUrl: form.thumbnailUrl.trim() || null,
+        venueId: Number(form.venueId),
+        showDateTime: new Date(form.showDateTime).toISOString(),
+        totalSeats: Number(form.totalSeats),
+        price: Number(form.price),
+      });
+      return thumbnailFile ? api.uploadShowThumbnail(created.id, thumbnailFile) : created;
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["shows"] });
       toast("success", "Show created", "The new show is live on the marquee.");
@@ -442,6 +461,16 @@ function CreateShowModal({ movies, events, venues, onClose }: {
         <div className="field">
           <label className="field-label" htmlFor="cs-datetime">Date &amp; time</label>
           <input id="cs-datetime" type="datetime-local" className="input" value={form.showDateTime} onChange={(e) => set("showDateTime", e.target.value)} />
+        </div>
+
+        <div className="field">
+          <label className="field-label" htmlFor="cs-thumbnail">Thumbnail image URL <span className="text-muted" style={{ fontWeight: 400 }}>(optional)</span></label>
+          <input id="cs-thumbnail" type="url" className="input" placeholder="https://example.com/show-image.jpg" value={form.thumbnailUrl} onChange={(e) => set("thumbnailUrl", e.target.value)} />
+        </div>
+
+        <div className="field">
+          <label className="field-label" htmlFor="cs-thumbnail-file">Upload thumbnail <span className="text-muted" style={{ fontWeight: 400 }}>(JPG, PNG or GIF, max 5 MB)</span></label>
+          <input id="cs-thumbnail-file" type="file" className="input" accept="image/jpeg,image/png,image/gif" onChange={(e) => setThumbnailFile(e.target.files?.[0] ?? null)} />
         </div>
 
         <div className="field">
@@ -700,7 +729,7 @@ export function AdminPage() {
   const [createVenueOpen, setCreateVenueOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Show | null>(null);
 
-  const { data: shows = [], isLoading: showsLoading, isError: showsError, refetch: refetchShows } = useQuery({ queryKey: ["shows"], queryFn: api.shows });
+  const { data: shows = [], isLoading: showsLoading, isError: showsError, refetch: refetchShows } = useQuery({ queryKey: ["shows"], queryFn: api.shows, staleTime: 0, refetchInterval: 15_000, refetchOnWindowFocus: true });
   const { data: movies = [], refetch: refetchMovies } = useQuery({ queryKey: ["movies"], queryFn: api.movies });
   const { data: events = [], refetch: refetchEvents } = useQuery({ queryKey: ["events"], queryFn: api.events });
   const { data: venues = [], refetch: refetchVenues } = useQuery({ queryKey: ["venues"], queryFn: api.venues });

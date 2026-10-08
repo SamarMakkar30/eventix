@@ -23,9 +23,9 @@ import SmartImage from "./smart-image";
 import type { Show, Movie, Event } from "../types/api";
 
 const posterFor = (show: Show, movies: Movie[], events: Event[]) =>
-  show.showType === "MOVIE"
+  show.thumbnailUrl ?? (show.showType === "MOVIE"
     ? movies.find((m) => m.id === show.movieId)?.posterUrl ?? null
-    : events.find((e) => e.id === show.eventId)?.bannerUrl ?? null;
+    : events.find((e) => e.id === show.eventId)?.bannerUrl ?? null);
 
 export function PosterRing({
   shows,
