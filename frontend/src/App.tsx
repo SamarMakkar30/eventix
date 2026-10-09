@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { Layout, Protected, AdminOnly, RouteLoadingFallback } from "./components/layout";
 import { AppErrorBoundary } from "./components/error-boundary";
@@ -7,6 +7,22 @@ import { AppErrorBoundary } from "./components/error-boundary";
 const HomePage = lazy(() =>
   import("./pages/home").then((m) => ({ default: m.HomePage })),
 );
+
+function LegacyExploreRedirect() {
+  const { category } = useParams();
+  const type = category?.toLowerCase() === "movies" || category?.toLowerCase() === "movie"
+    ? "MOVIE"
+    : category?.toLowerCase() === "events" || category?.toLowerCase() === "event"
+      ? "EVENT"
+      : undefined;
+  return <Navigate to={type ? `/shows?type=${type}` : "/shows"} replace />;
+}
+
+function LegacySearchRedirect() {
+  const location = useLocation();
+  const query = new URLSearchParams(location.search).get("q");
+  return <Navigate to={query ? `/shows?q=${encodeURIComponent(query)}` : "/shows"} replace />;
+}
 const ShowsPage = lazy(() =>
   import("./pages/shows").then((m) => ({ default: m.ShowsPage })),
 );
@@ -88,8 +104,8 @@ export default function App() {
               }
             />
             <Route path="/explore" element={<Navigate to="/shows" replace />} />
-            <Route path="/explore/:category" element={<Navigate to="/shows" replace />} />
-            <Route path="/search" element={<Navigate to="/shows" replace />} />
+            <Route path="/explore/:category" element={<LegacyExploreRedirect />} />
+            <Route path="/search" element={<LegacySearchRedirect />} />
 
             <Route
               path="/shows/:id"

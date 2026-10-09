@@ -24,6 +24,9 @@ public class InventoryClient {
     @Value("${inventory.service.url}")
     private String inventoryServiceUrl;
 
+    @Value("${internal.service-key}")
+    private String internalServiceKey;
+
     // NOT best-effort: if this fails, the booking must fail too - we cannot confirm
     // a booking for seats we never actually reserved.
     public void decrementSeats(Long showId, Integer quantity, String authorizationHeader) {
@@ -46,6 +49,7 @@ public class InventoryClient {
     private void post(Long showId, String action, Integer quantity, String authorizationHeader) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Internal-Service-Key", internalServiceKey);
         if (authorizationHeader != null) {
             headers.set(HttpHeaders.AUTHORIZATION, authorizationHeader);
         }

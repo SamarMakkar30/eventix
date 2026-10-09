@@ -97,7 +97,7 @@ export function LoginPage() {
   useDocumentMeta("Sign in — Eventix", "Sign in to your Eventix account to book movies and live events.");
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isReady, isAuthenticated } = useAuth();
   const { show: toast } = useToast();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -106,8 +106,8 @@ export function LoginPage() {
   const next = safeNext(params.get("next"));
 
   useEffect(() => {
-    if (isAuthenticated) navigate(next, { replace: true });
-  }, [isAuthenticated, navigate, next]);
+    if (isReady && isAuthenticated) navigate(next, { replace: true });
+  }, [isAuthenticated, isReady, navigate, next]);
 
   function validate() {
     const e: Record<string, string> = {};
@@ -231,15 +231,15 @@ export function LoginPage() {
 export function RegisterPage() {
   useDocumentMeta("Create account — Eventix", "Create a free Eventix account — thirty seconds to your first ticket.");
   const navigate = useNavigate();
-  const { register, isAuthenticated } = useAuth();
+  const { register, isReady, isAuthenticated } = useAuth();
   const { show: toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/", { replace: true });
-  }, [isAuthenticated, navigate]);
+    if (isReady && isAuthenticated) navigate("/", { replace: true });
+  }, [isAuthenticated, isReady, navigate]);
 
   function validate() {
     const e: Record<string, string> = {};

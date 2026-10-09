@@ -787,11 +787,7 @@ button.seat-v2:hover:not(:disabled) { transform: scale(1.2); border-color: var(-
   height: 2px;
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ev-gold) 70%, transparent), transparent);
 }
-@media (max-width: 640px) {
-  button.seat-v2 { width: 22px; height: 22px; }
-  .seat-row { gap: 0.25rem; }
-  .seat-row__aisle { width: 0.75rem; }
-}
+
 /* selection summary bar under the map */
 .seat-selection-bar {
   display: flex;
@@ -1199,6 +1195,13 @@ button.seat-v2:hover:not(:disabled) { transform: scale(1.2); border-color: var(-
 @media (min-width: 820px) {
   .responsive-2col-lg { grid-template-columns: 1fr 320px !important; }
 }
+/* Below the breakpoint, single column — items must be allowed to shrink */
+@media (max-width: 819px) {
+  .responsive-2col-lg { grid-template-columns: 1fr; }
+  .responsive-2col-lg > * { min-width: 0; max-width: 100%; }
+  .responsive-2col-lg .order-summary, .responsive-2col-lg .card { width: 100%; }
+  .responsive-2col-lg .order-summary .order-summary__label { overflow-wrap: anywhere; }
+}
 
 /* ── Checkbox ────────────────────────────────────────────────────────── */
 .checkbox { display: flex; align-items: center; gap: 0.625rem; }
@@ -1232,4 +1235,125 @@ button.seat-v2:hover:not(:disabled) { transform: scale(1.2); border-color: var(-
   .beam::before { animation: none; }
   .float-soft, .pulse-soft { animation: none; }
   .hero-v2__scroll-line::after { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE TUNING — applies only below 640px. Desktop rules untouched.
+   Tightens oversized sections, paddings, and display type on phones.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Global page rhythm */
+  :root { --nav-h: 60px; }
+  .page { padding-top: calc(var(--nav-h) + 1.25rem); padding-bottom: 3rem; }
+  .section-v2 { padding: 2.75rem 0; }
+  .container { width: calc(100% - 2rem); }
+
+  /* Display type scale — keep impact, lose the bulk */
+  .display-hero { font-size: clamp(2.5rem, 11.5vw, 3.25rem); }
+  .display-section { font-size: clamp(1.75rem, 8vw, 2.25rem); }
+  h1.hero__headline, .hero-v2__content h1 { font-size: clamp(2.5rem, 11.5vw, 3.25rem); }
+
+  /* Hero: shorter stage, smaller sub, tighter CTA stack */
+  .hero-v2 { padding: calc(var(--nav-h) + 2rem) 1.25rem 3.5rem; min-height: 92svh; }
+  .hero-v2__sub { font-size: 0.9375rem; padding: 0 0.25rem; }
+  .hero-v2__scroll { display: none; }
+  .hero-v2__eyebrow { letter-spacing: 0.18em; font-size: 0.625rem; gap: 0.5rem; }
+  .hero-v2__eyebrow::before, .hero-v2__eyebrow::after { width: 1.25rem; }
+
+  /* Buttons: full-width friendly on phones */
+  .hero-v2__actions { width: 100%; flex-direction: column; align-items: stretch; gap: 0.625rem; }
+  .hero-v2__actions .btn { width: 100%; justify-content: center; }
+
+  /* Stats row wraps tighter */
+  .stat-v2 { align-items: center; }
+  .stat-v2__value { font-size: 1.625rem; }
+
+  /* Section heads: stack and tighten */
+  .section-head { margin-bottom: 1.75rem; }
+  .section-head .btn { display: none; } /* section CTAs fold into the page flow on mobile */
+
+  /* Steps: tight rows, smaller numerals */
+  .step-row { gap: 0.875rem; padding: 1.0625rem 0; grid-template-columns: auto 1fr; align-items: start; }
+  .step-row__num { font-size: 1.625rem; min-width: 2.5ch; -webkit-text-stroke-width: 0.75px; }
+  .step-row__title { font-size: 1.0625rem; }
+  .step-row__desc { font-size: 0.875rem; line-height: 1.6; }
+
+  /* Poster cards + rails */
+  .grid--cards { gap: 0.875rem; }
+  .scroll-rail--poster > * { width: min(168px, 52vw); }
+
+  /* Premiere spotlight: art shorter, body tighter */
+  .premiere__art { min-height: 210px; }
+  .premiere__body { padding: 1.25rem 1.25rem 1.5rem; gap: 0.75rem; }
+  .premiere__title { font-size: clamp(1.625rem, 7.5vw, 2.25rem); }
+
+  /* Category tiles: compact 2x2 — punchy, not poster-sized */
+  .cat-tile { aspect-ratio: 4/2.9; border-radius: var(--ev-radius-control); }
+  .cat-tile__name { font-size: 1.0625rem; }
+  .cat-tile__count { font-size: 0.5625rem; letter-spacing: 0.14em; }
+  .cat-tile__label { padding: 0.875rem; }
+  .cat-tile__arrow { width: 1.75rem; height: 1.75rem; top: 0.75rem; right: 0.75rem; }
+
+  /* Upcoming rows: stack gracefully */
+  .row-v2 { grid-template-columns: auto 1fr; row-gap: 0.75rem; }
+  .row-v2__side { grid-column: 1 / -1; justify-content: space-between; }
+
+  /* Seat page: genuinely smaller seats so 12 columns fit 390px with no overflow */
+  button.seat-v2 { width: 20px; height: 20px; border-radius: 5px 5px 3px 3px; }
+  .seat-row { gap: 4px; }
+  .seat-row__aisle { width: 10px; }
+  .seat-row__label { width: 0.75rem; font-size: 0.5rem; }
+  .stage-v2 { width: min(240px, 70%); letter-spacing: 0.24em; }
+  .seat-selection-bar { border-radius: var(--ev-radius-card); gap: 0.5rem; padding: 0.75rem 1rem; }
+  .seat-selection-bar__seats { font-size: 0.75rem; word-break: break-word; }
+  .quantity-stepper { padding: 1rem 1.125rem; }
+  .ticket-v2__grid { grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; }
+  .ticket-v2__head, .ticket-v2__body { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .ticket-v2__title { font-size: 1.5rem; }
+
+  /* Checkout & auth */
+  .auth-v2__main { padding: 1.75rem 1.25rem; }
+  .auth-v2__card { width: 100%; }
+  .checkout-steps { margin-bottom: 1.75rem; }
+
+  /* Admin on phones */
+  .admin-main { padding: 1.25rem; }
+  .data-table { font-size: 0.875rem; }
+  .data-table th, .data-table td { padding: 0.625rem 0.625rem; }
+
+  /* Footer: stacked, wordmark fits any width */
+  .footer-v2__cols { grid-template-columns: 1fr !important; gap: 1.75rem; padding: 2.25rem 0 1.5rem; }
+  .footer-v2__wordmark { font-size: clamp(2.75rem, 15vw, 4.5rem); -webkit-text-stroke-width: 0.5px; }
+  .footer-v2 { padding-bottom: 0.5rem; }
+
+  /* Cookie banner stays above everything without covering the whole screen */
+  [aria-label="Cookie preferences"] { left: 0.75rem; right: 0.75rem; bottom: 0.75rem; }
+
+  /* Mobile menu: smaller type so links never clip */
+  .mobile-v2__link { font-size: 1.75rem; }
+
+  /* FAQ + legal pages */
+  .not-found__code { font-size: clamp(3.25rem, 20vw, 5rem); }
+}
+
+/* Extra-tight at 360px and below (small Androids) */
+@media (max-width: 360px) {
+  .display-hero { font-size: 2.25rem; }
+  .premiere__title { font-size: 1.5rem; }
+  .seat-selection-bar__seats { display: none; } /* keep the bar to one clean line */
+  .hero-v2__actions .btn { font-size: 0.9375rem; height: 3rem; }
+}
+
+/* Seat map — definitive mobile sizing (late + specific so it always wins) */
+@media (max-width: 640px) {
+  .seat-map .seat-row button.seat-v2 { width: 20px; height: 20px; }
+  .seat-map .seat-row { gap: 4px; }
+  .seat-map .seat-row__aisle { width: 10px; }
+  .seat-map .seat-row__label { width: 0.75rem; font-size: 0.5rem; }
+}
+@media (max-width: 380px) {
+  .seat-map .seat-row button.seat-v2 { width: 17px; height: 17px; border-radius: 4px 4px 3px 3px; }
+  .seat-map .seat-row { gap: 3px; }
+  .seat-map .seat-row__aisle { width: 7px; }
+  .seat-map .seat-row__label { width: 0.625rem; font-size: 0.4375rem; }
 }

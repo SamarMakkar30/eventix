@@ -4,7 +4,7 @@ services:
     container_name: eventix-postgres
     environment:
       POSTGRES_USER: eventix
-      POSTGRES_PASSWORD: eventix
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eventix}
       POSTGRES_MULTIPLE_DATABASES: auth_db,catalog_db,inventory_db,booking_db,payment_db,notification_db
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -20,8 +20,8 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
       SPRING_DATASOURCE_USERNAME: eventix
-      SPRING_DATASOURCE_PASSWORD: eventix
-      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-eventix}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-do-not-use-this-value-anywhere-real-32chars}
     ports:
       - "8081:8081"
     depends_on:
@@ -34,8 +34,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/catalog_db
       SPRING_DATASOURCE_USERNAME: eventix
-      SPRING_DATASOURCE_PASSWORD: eventix
-      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-eventix}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-do-not-use-this-value-anywhere-real-32chars}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-local-internal-service-key-change-me}
     ports:
       - "8082:8082"
     depends_on:
@@ -49,8 +50,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/inventory_db
       SPRING_DATASOURCE_USERNAME: eventix
-      SPRING_DATASOURCE_PASSWORD: eventix
-      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-eventix}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-do-not-use-this-value-anywhere-real-32chars}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-local-internal-service-key-change-me}
     ports:
       - "8083:8083"
     depends_on:
@@ -63,8 +65,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/booking_db
       SPRING_DATASOURCE_USERNAME: eventix
-      SPRING_DATASOURCE_PASSWORD: eventix
-      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-eventix}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-do-not-use-this-value-anywhere-real-32chars}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-local-internal-service-key-change-me}
     ports:
       - "8084:8084"
     depends_on:
@@ -81,8 +84,8 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payment_db
       SPRING_DATASOURCE_USERNAME: eventix
-      SPRING_DATASOURCE_PASSWORD: eventix
-      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-eventix}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-do-not-use-this-value-anywhere-real-32chars}
     ports:
       - "8085:8085"
     depends_on:
@@ -95,8 +98,8 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
       SPRING_DATASOURCE_USERNAME: eventix
-      SPRING_DATASOURCE_PASSWORD: eventix
-      JWT_SECRET: local-dev-secret-do-not-use-this-value-anywhere-real-32chars
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-eventix}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-do-not-use-this-value-anywhere-real-32chars}
     ports:
       - "8086:8086"
     depends_on:

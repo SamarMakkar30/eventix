@@ -20,6 +20,9 @@ jwt:
   # Must match auth-service's JWT_SECRET exactly - it validates tokens it did not issue.
   secret: ${JWT_SECRET:dev-only-secret-please-change-me-before-any-real-deployment-32chars-min}
 
+internal:
+  service-key: ${INTERNAL_SERVICE_KEY:local-internal-service-key-change-me}
+
 management:
   endpoints:
     web:

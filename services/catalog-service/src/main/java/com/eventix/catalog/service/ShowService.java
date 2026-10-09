@@ -55,10 +55,12 @@ public class ShowService {
 
         Show saved = showRepository.save(show);
 
-        // Forward the caller's own admin token downstream rather than inventing a
-        // separate service-to-service credential - Inventory Service enforces the
-        // same ADMIN check on this endpoint independently.
-        inventoryClient.initializeInventory(saved.getId(), saved.getTotalSeats(), authorizationHeader);
+        try {
+            inventoryClient.initializeInventory(saved.getId(), saved.getTotalSeats(), authorizationHeader);
+        } catch (RuntimeException ex) {
+            showRepository.delete(saved);
+            throw ex;
+        }
 
         return toResponse(saved, title, venue.getName());
     }
